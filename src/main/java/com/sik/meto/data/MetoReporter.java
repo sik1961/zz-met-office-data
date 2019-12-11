@@ -10,7 +10,7 @@ public class MetoReporter {
 
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
 
-    private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s";
+    private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
     private String LOC_TIME_FORMAT = "%s %s";
     private float minTemp = 100.0f;
     private String minTempLocTime = "";
@@ -20,6 +20,8 @@ public class MetoReporter {
     private String maxAfDaysLocTime = "";
     private float maxSunHours = 0.0f;
     private String maxSunHoursLocTime = "";
+    private float maxRainfallMm = 0;
+    private String maxRainfallMmLocTime = "";
 
     public void printRecordsAndSummary(Set<MonthlyWeatherData> weatherData) {
         this.printRecordHeadings();
@@ -32,8 +34,8 @@ public class MetoReporter {
     }
 
     public void printRecordHeadings() {
-        System.out.println(String.format(MONTH_DATA_FORMAT, "Station", "Month", "Min.Temp", "Max.Temp", "FrostDays", "SunHours"));
-        System.out.println(String.format(MONTH_DATA_FORMAT,"=======", "=====", "========", "========", "=========", "========"));
+        System.out.println(String.format(MONTH_DATA_FORMAT, "Station", "Month", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
+        System.out.println(String.format(MONTH_DATA_FORMAT, "=======", "=====", "========", "========", "=========", "======", "========"));
     }
 
     public void printRecord(MonthlyWeatherData monthData) {
@@ -42,6 +44,7 @@ public class MetoReporter {
                 monthData.getTempMinC(),
                 monthData.getTempMaxC(),
                 monthData.getAfDays(),
+                monthData.getRainfallMm(),
                 monthData.getSunHours()));
 
         this.updateExtremes(monthData);
@@ -49,10 +52,11 @@ public class MetoReporter {
 
     public void printExtremes() {
         System.out.println("");
-        System.out.println("Min.Temp C   : " + this.minTemp + " (" + this.minTempLocTime + ")");
-        System.out.println("Max.Temp C   : " + this.maxTemp + " (" + this.maxTempLocTime + ")");
-        System.out.println("Max AF Days C: " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
-        System.out.println("Max.Sun Hours: " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
+        System.out.println("Min. Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
+        System.out.println("Max. Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
+        System.out.println("Max AF Days    : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
+        System.out.println("Max Rainfall Mm: " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
+        System.out.println("Max.Sun Hours  : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
         System.out.println("");
     }
 
@@ -75,6 +79,13 @@ public class MetoReporter {
                     monthData.getStationName(),
                     monthData.getMonthStartDate().format(YYYY_MM));
         }
+        if (monthData.getRainfallMm() != null && monthData.getRainfallMm() > this.maxRainfallMm) {
+            this.maxRainfallMm = monthData.getRainfallMm();
+            this.maxRainfallMmLocTime = String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM));
+        }
+
         if (monthData.getSunHours() != null && monthData.getSunHours() > this.maxSunHours) {
             this.maxSunHours = monthData.getSunHours();
             this.maxSunHoursLocTime = String.format(LOC_TIME_FORMAT,
