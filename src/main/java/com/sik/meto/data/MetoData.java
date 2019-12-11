@@ -14,7 +14,7 @@ public class MetoData {
 
         Set<MonthlyWeatherData> weatherData = manager.getMonthlyData();
 
-        Set<MonthlyWeatherData> sheffData = manager.filterByStation(weatherData, "Sheffield");
+        Set<MonthlyWeatherData> locationSpecificData = manager.filterByStation(weatherData, "Paisley");
 
         reporter.printRecordsAndSummary(weatherData);
 //        sheffData.stream()

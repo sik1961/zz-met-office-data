@@ -17,7 +17,9 @@ public class MetoDataManager {
 
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
 	private static final String EQ = "=";
-	private static final String AX = "/*";
+	private static final String AX = "\\*";
+	private static final String HASH = "#";
+	private static final String DOLLAR = "$";
 	private static final String MT = "";
 	private static final String SPACES = " +";
 
@@ -73,22 +75,27 @@ public class MetoDataManager {
 //				System.out.println(" fields.length=" + fields.length);
 
 				if (this.isMonthlyData(fields)) {
-					if (fields.length == 8) {
-						monthlyData.add(new MonthlyWeatherData(key, location,
-								this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])),
-								getFloat(fields[I_TMAX]),
-								getFloat(fields[I_TMIN]),
-								getInt(fields[I_AFDY]),
-								getFloat(fields[I_RNMM]),
-								getFloat(fields[I_SUNH])));
+					if (fields.length >= 8) {
+						monthlyData.add(MonthlyWeatherData.builder()
+								.stationName(key)
+								.stationLocation(location)
+								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
+								.tempMaxC(getFloat(fields[I_TMAX]))
+								.tempMinC(getFloat(fields[I_TMIN]))
+								.afDays(getInt(fields[I_AFDY]))
+								.rainfallMm(getFloat(fields[I_RNMM]))
+								.sunHours(getFloat(fields[I_SUNH])).build());
 					} else if (fields.length == 7) {
-						monthlyData.add(new MonthlyWeatherData(key, location,
-								this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])),
-								getFloat(fields[I_TMAX]),
-								getFloat(fields[I_TMIN]),
-								getInt(fields[I_AFDY]),
-								getFloat(fields[I_RNMM]),
-								null));
+						monthlyData.add(MonthlyWeatherData.builder()
+								.stationName(key)
+								.stationLocation(location)
+								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
+								.tempMaxC(getFloat(fields[I_TMAX]))
+								.tempMinC(getFloat(fields[I_TMIN]))
+								.afDays(getInt(fields[I_AFDY]))
+								.rainfallMm(getFloat(fields[I_RNMM])).build());
+					} else {
+						System.out.println("Warn: " + inputLine + " #fields=" + fields.length);
 					}
 				}
 				//br.close();
@@ -164,6 +171,7 @@ public class MetoDataManager {
 			return Integer.parseInt(strip(i));
 		}
 		catch(NumberFormatException nfe) {
+			System.out.println("Warn: " + i + " NFE " + strip(i));
 			return null;
 		}
 	}
@@ -173,6 +181,7 @@ public class MetoDataManager {
 			return Float.parseFloat(strip(i));
 		}
 		catch(NumberFormatException nfe) {
+			System.out.println("Warn: " + i + " NFE " + strip(i));
 			return null;
 		}
 	}
@@ -188,7 +197,9 @@ public class MetoDataManager {
 	}
 
 	private String strip(String s) {
-		return s.replaceAll(AX, MT);
+		return s.replaceAll(AX, MT)
+				.replaceAll(HASH,MT)
+				.replaceAll(DOLLAR,MT);
 	}
 
 }
