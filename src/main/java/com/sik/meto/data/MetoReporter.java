@@ -1,7 +1,9 @@
 package com.sik.meto.data;
 
+import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 public class MetoReporter {
 
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
+    private static final DecimalFormat DF = new DecimalFormat("###.#");
 
     private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
     private String LOC_TIME_FORMAT = "%s %s";
@@ -51,6 +54,32 @@ public class MetoReporter {
     }
 
     public void printExtremes() {
+        System.out.println("");
+        System.out.println("Min. Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
+        System.out.println("Max. Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
+        System.out.println("Max AF Days    : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
+        System.out.println("Max Rainfall Mm: " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
+        System.out.println("Max.Sun Hours  : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
+        System.out.println("");
+    }
+
+    public void printYearlyAverages(Map<Integer,YearlyAverageWeatherData> yearlyAverageWeatherDataMap) {
+        System.out.println("");
+        System.out.println(String.format(MONTH_DATA_FORMAT, "", "Year", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
+        System.out.println(String.format(MONTH_DATA_FORMAT, "", "====", "========", "========", "=========", "======", "========"));
+
+        for (Integer year: yearlyAverageWeatherDataMap.keySet()) {
+            YearlyAverageWeatherData yearData = yearlyAverageWeatherDataMap.get(year);
+            System.out.println(String.format(MONTH_DATA_FORMAT, "",
+                    yearData.getYearStartDate().getYear(),
+                    DF.format(yearData.getAvgTempMinC()),
+                    DF.format(yearData.getAvgTempMaxC()),
+                    DF.format(yearData.getAvgAfDays()),
+                    DF.format(yearData.getAvgRainfallMm()),
+                    DF.format(yearData.getAvgSunHours())));
+        }
+
+
         System.out.println("");
         System.out.println("Min. Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
         System.out.println("Max. Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");

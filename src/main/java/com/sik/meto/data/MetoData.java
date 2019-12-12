@@ -17,6 +17,12 @@ public class MetoData {
         Set<MonthlyWeatherData> locationSpecificData = manager.filterByStation(weatherData, "Paisley");
 
         reporter.printRecordsAndSummary(weatherData);
+        reporter.printYearlyAverages(manager.getYearlyAverageWeatherDataMap());
+
+
+
+
+
 //        sheffData.stream()
 //                .sorted()
 //                .collect(Collectors.toCollection(LinkedHashSet::new))

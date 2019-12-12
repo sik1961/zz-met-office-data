@@ -24,15 +24,19 @@ public class MetoDataManager {
 	private static final String SPACES = " +";
 
 	private Map<String, String> urlMap = new HashMap<>();
-	private Set<MonthlyWeatherData> monthlyWeatherData;
+	private Map<Integer, YearlyAverageWeatherData> yearlyAverageWeatherDataMap = new TreeMap<>();
+
+	public Map<Integer, YearlyAverageWeatherData> getYearlyAverageWeatherDataMap() {
+		return this.yearlyAverageWeatherDataMap;
+	}
 
 	protected Set<MonthlyWeatherData> getMonthlyData() {
 		Set<MonthlyWeatherData> monthlyData = new TreeSet<>();
 
 		this.urlMap = this.buildUrlMap(IMPORT_FILE);
 
-		for (String key : urlMap.keySet()) {
-			monthlyData.addAll(readMonthlyDataFromUrl(key));
+		for (String weatherStation : urlMap.keySet()) {
+			monthlyData.addAll(readMonthlyDataFromUrl(weatherStation));
 		}
 
 		System.out.println("records=" + monthlyData.size());
@@ -45,14 +49,14 @@ public class MetoDataManager {
 
 	}
 
-	private Set<MonthlyWeatherData> readMonthlyDataFromUrl(String key) {
-		System.out.println("Getting: " + urlMap.get(key));
-		Set<MonthlyWeatherData> monthlyData = new TreeSet<>();
+	private Set<MonthlyWeatherData> readMonthlyDataFromUrl(String weatherStation) {
+		System.out.println("Getting: " + urlMap.get(weatherStation));
+		Set<MonthlyWeatherData> monthlyWeatherDataSet = new TreeSet<>();
 		int linesInFile=0;
 		String location = "n/a";
 		try {
 
-			URL page = new URL(urlMap.get(key));
+			URL page = new URL(urlMap.get(weatherStation));
 			BufferedReader br = new BufferedReader(new InputStreamReader(page.openStream()));
 
 			String inputLine;
@@ -74,37 +78,43 @@ public class MetoDataManager {
 //				}
 //				System.out.println(" fields.length=" + fields.length);
 
+				MonthlyWeatherData monthData = null;
 				if (this.isMonthlyData(fields)) {
 					if (fields.length >= 8) {
-						monthlyData.add(MonthlyWeatherData.builder()
-								.stationName(key)
+						monthData = MonthlyWeatherData.builder()
+								.stationName(weatherStation)
 								.stationLocation(location)
 								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
 								.tempMaxC(getFloat(fields[I_TMAX]))
 								.tempMinC(getFloat(fields[I_TMIN]))
 								.afDays(getInt(fields[I_AFDY]))
 								.rainfallMm(getFloat(fields[I_RNMM]))
-								.sunHours(getFloat(fields[I_SUNH])).build());
+								.sunHours(getFloat(fields[I_SUNH])).build();
 					} else if (fields.length == 7) {
-						monthlyData.add(MonthlyWeatherData.builder()
-								.stationName(key)
+						monthData = MonthlyWeatherData.builder()
+								.stationName(weatherStation)
 								.stationLocation(location)
 								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
 								.tempMaxC(getFloat(fields[I_TMAX]))
 								.tempMinC(getFloat(fields[I_TMIN]))
 								.afDays(getInt(fields[I_AFDY]))
-								.rainfallMm(getFloat(fields[I_RNMM])).build());
+								.rainfallMm(getFloat(fields[I_RNMM])).build();
 					} else {
 						System.out.println("Warn: " + inputLine + " #fields=" + fields.length);
 					}
+				}
+				if (monthData != null) {
+					this.updateYearlyAvarageWeatherDataMap(monthData);
+					monthlyWeatherDataSet.add(monthData);
 				}
 				//br.close();
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		System.out.println("lines=" + linesInFile + " records=" + monthlyData.size());
-		return monthlyData;
+		System.out.println("lines=" + linesInFile + " records=" + monthlyWeatherDataSet.size());
+
+		return monthlyWeatherDataSet;
 	}
 
 	private Map<String, String> buildUrlMap(String fileName) {
@@ -120,10 +130,6 @@ public class MetoDataManager {
 		} catch (IOException e) {
 			throw new IllegalStateException("I/O Error on: " + IMPORT_FILE, e);
 		}
-
-//		for (Object k : retVal.keySet()) {
-//			System.out.println(">>>>>>>>" + k.toString() + " = " + retVal.get(k) );
-//		}
 
 		return retVal;
 	}
@@ -143,10 +149,52 @@ public class MetoDataManager {
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
+	public void updateYearlyAvarageWeatherDataMap(MonthlyWeatherData monthlyWeatherData) {
+		YearlyAverageWeatherData existing = this.yearlyAverageWeatherDataMap.get(monthlyWeatherData.getMonthStartDate().getYear());
+		if (existing == null) {
+			this.yearlyAverageWeatherDataMap.put(monthlyWeatherData.getMonthStartDate().getYear(),
+					YearlyAverageWeatherData.builder()
+							.yearStartDate(getYearStartDate(monthlyWeatherData.getMonthStartDate().getYear()))
+							.countTempMaxC(monthlyWeatherData.getTempMaxC()!=null?1:0)
+							.totTempMaxC(monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0)
+							.countTempMinC(monthlyWeatherData.getTempMinC()!=null?1:0)
+							.totTempMinC(monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0)
+							.countAfDays(monthlyWeatherData.getAfDays()!=null?1:0)
+							.totAfDays(monthlyWeatherData.getAfDays()!=null?intToFloat(monthlyWeatherData.getAfDays()):0)
+							.countRainfallMm(monthlyWeatherData.getRainfallMm()!=null?1:0)
+							.totRainfallMm(monthlyWeatherData.getRainfallMm()!=null?monthlyWeatherData.getRainfallMm():0)
+							.countSunHours(monthlyWeatherData.getSunHours()!=null?1:0)
+							.totSunHours(monthlyWeatherData.getSunHours()!=null?monthlyWeatherData.getSunHours():0)
+							.build());
+		} else {
+			this.yearlyAverageWeatherDataMap.put(existing.getYearStartDate().getYear(),
+					YearlyAverageWeatherData.builder()
+							.yearStartDate(existing.getYearStartDate())
+							.countTempMaxC(existing.getCountTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?1:0))
+							.totTempMaxC(existing.getTotTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0))
+							.countTempMinC(existing.getCountTempMinC() + (monthlyWeatherData.getTempMinC()!=null?1:0))
+							.totTempMinC(existing.getTotTempMinC() + (monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0))
+							.countAfDays(existing.getCountAfDays() + (monthlyWeatherData.getAfDays()!=null?1:0))
+							.totAfDays(existing.getTotAfDays() + (monthlyWeatherData.getAfDays()!=null?intToFloat(monthlyWeatherData.getAfDays()):0))
+							.countRainfallMm(existing.getCountRainfallMm() + (monthlyWeatherData.getRainfallMm()!=null?1:0))
+							.totRainfallMm(existing.getTotRainfallMm() + (monthlyWeatherData.getRainfallMm()!=null?monthlyWeatherData.getRainfallMm():0))
+							.countSunHours(existing.getCountSunHours() + (monthlyWeatherData.getSunHours()!=null?1:0))
+							.totSunHours(existing.getTotSunHours() + (monthlyWeatherData.getSunHours()!=null?monthlyWeatherData.getSunHours():0))
+							.build());
+		}
+	}
+
+	private Float intToFloat(Integer i) {
+		return Float.parseFloat(i.toString());
+	}
+
 	private LocalDate getMonthStartDate(final int year, final int month) {
 		return LocalDate.of(year, month, 1);
 	}
 
+	private LocalDate getYearStartDate(final int year) {
+		return LocalDate.of(year, 1, 1);
+	}
 
 	private boolean isValidUrlProperty(String s) {
 		return s.indexOf(EQ) > 1 && s.split(EQ).length == 2;
@@ -171,7 +219,6 @@ public class MetoDataManager {
 			return Integer.parseInt(strip(i));
 		}
 		catch(NumberFormatException nfe) {
-			System.out.println("Warn: " + i + " NFE " + strip(i));
 			return null;
 		}
 	}
@@ -181,7 +228,6 @@ public class MetoDataManager {
 			return Float.parseFloat(strip(i));
 		}
 		catch(NumberFormatException nfe) {
-			System.out.println("Warn: " + i + " NFE " + strip(i));
 			return null;
 		}
 	}
