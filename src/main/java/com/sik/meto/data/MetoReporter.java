@@ -1,5 +1,7 @@
 package com.sik.meto.data;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
@@ -11,7 +13,8 @@ import java.util.stream.Collectors;
 public class MetoReporter {
 
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
-    private static final DecimalFormat DF = new DecimalFormat("###.#");
+    private static final DecimalFormat DF = new DecimalFormat("###.0");
+    private static final String CR = "\n";
 
     private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
     private String LOC_TIME_FORMAT = "%s %s";
@@ -25,52 +28,87 @@ public class MetoReporter {
     private String maxSunHoursLocTime = "";
     private float maxRainfallMm = 0;
     private String maxRainfallMmLocTime = "";
+    
+    private FileWriter mainWriter;
+    private FileWriter locationWriter;
+    private FileWriter averageWriter;
 
-    public void printRecordsAndSummary(Set<MonthlyWeatherData> weatherData) {
-        this.printRecordHeadings();
-
-        weatherData.stream()
-                .sorted()
-                .collect(Collectors.toCollection(LinkedHashSet::new))
-                .forEach(this::printRecord);
-        this.printExtremes();
+    public MetoReporter() throws IOException {
+        this.mainWriter = new FileWriter("/Users/sik/met-office/zz-metoffice-full.txt");
+        this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
     }
 
-    public void printRecordHeadings() {
-        System.out.println(String.format(MONTH_DATA_FORMAT, "Station", "Month", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
-        System.out.println(String.format(MONTH_DATA_FORMAT, "=======", "=====", "========", "========", "=========", "======", "========"));
+//    public void printRecordsAndSummary(Set<MonthlyWeatherData> weatherData) throws IOException {
+//        this.printRecordHeadings();
+//
+//        weatherData.stream()
+//                .sorted()
+//                .collect(Collectors.toCollection(LinkedHashSet::new))
+//                .forEach(this::printRecord);
+//
+//        mainWriter.close();
+//    }
+
+    public void printLocations(Map<String,Set<MonthlyWeatherData>> locationData) throws IOException {
+        locationData.entrySet().forEach(this::printLocation);
+    }
+
+
+    private void printLocation(Map.Entry<String,Set<MonthlyWeatherData>> locationData) {
+        try {
+            String fileName = "/Users/sik/met-office/metoffice-"
+                    + locationData.getValue().stream().findFirst().get().getStationName()+ ".txt";
+            locationWriter = new FileWriter(fileName);
+            this.printRecordHeadings();
+            locationData.getValue().stream()
+                    .sorted()
+                    .collect(Collectors.toCollection(LinkedHashSet::new))
+                    .forEach(this::printRecord);
+            locationWriter.close();
+            System.out.println("Report written to: " + fileName);
+        } catch(IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public void printRecordHeadings() throws IOException {
+        writeLine(String.format(MONTH_DATA_FORMAT, "Station", "Month", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
+        writeLine(String.format(MONTH_DATA_FORMAT, "=======", "=====", "========", "========", "=========", "======", "========"));
     }
 
     public void printRecord(MonthlyWeatherData monthData) {
-        System.out.println(String.format(MONTH_DATA_FORMAT,monthData.getStationName(),
-                monthData.getMonthStartDate().format(YYYY_MM),
-                monthData.getTempMinC(),
-                monthData.getTempMaxC(),
-                monthData.getAfDays(),
-                monthData.getRainfallMm(),
-                monthData.getSunHours()));
-
+        try {
+            writeLine(String.format(MONTH_DATA_FORMAT, monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM),
+                    monthData.getTempMinC(),
+                    monthData.getTempMaxC(),
+                    monthData.getAfDays(),
+                    monthData.getRainfallMm(),
+                    monthData.getSunHours()));
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
         this.updateExtremes(monthData);
     }
 
-    public void printExtremes() {
-        System.out.println("");
-        System.out.println("Min. Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
-        System.out.println("Max. Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
-        System.out.println("Max AF Days    : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
-        System.out.println("Max Rainfall Mm: " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
-        System.out.println("Max.Sun Hours  : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
-        System.out.println("");
+    public void printExtremes() throws IOException {
+        writeAverageLine("");
+        writeAverageLine(" Lowest Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
+        writeAverageLine("Highest Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
+        writeAverageLine("Highest AF Days   : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
+        writeAverageLine("Max. Rainfall Mm  : " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
+        writeAverageLine("Max. Sun Hours    : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
+        writeAverageLine("");
     }
 
-    public void printYearlyAverages(Map<Integer,YearlyAverageWeatherData> yearlyAverageWeatherDataMap) {
-        System.out.println("");
-        System.out.println(String.format(MONTH_DATA_FORMAT, "", "Year", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
-        System.out.println(String.format(MONTH_DATA_FORMAT, "", "====", "========", "========", "=========", "======", "========"));
+    public void printYearlyAverages(Map<Integer,YearlyAverageWeatherData> yearlyAverageWeatherDataMap) throws IOException {
+        writeAverageLine("");
+        writeAverageLine(String.format(MONTH_DATA_FORMAT, "", "Year", "Min.Temp", "Max.Temp", "FrostDays", "RainMM", "SunHours"));
+        writeAverageLine(String.format(MONTH_DATA_FORMAT, "", "====", "========", "========", "=========", "======", "========"));
 
         for (Integer year: yearlyAverageWeatherDataMap.keySet()) {
             YearlyAverageWeatherData yearData = yearlyAverageWeatherDataMap.get(year);
-            System.out.println(String.format(MONTH_DATA_FORMAT, "",
+            writeAverageLine(String.format(MONTH_DATA_FORMAT, "",
                     yearData.getYearStartDate().getYear(),
                     DF.format(yearData.getAvgTempMinC()),
                     DF.format(yearData.getAvgTempMaxC()),
@@ -79,14 +117,8 @@ public class MetoReporter {
                     DF.format(yearData.getAvgSunHours())));
         }
 
-
-        System.out.println("");
-        System.out.println("Min. Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
-        System.out.println("Max. Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
-        System.out.println("Max AF Days    : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
-        System.out.println("Max Rainfall Mm: " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
-        System.out.println("Max.Sun Hours  : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
-        System.out.println("");
+        printExtremes();
+        averageWriter.close();
     }
 
     private void updateExtremes(MonthlyWeatherData monthData) {
@@ -122,5 +154,12 @@ public class MetoReporter {
                     monthData.getMonthStartDate().format(YYYY_MM));
         }
     }
+    
+    private void writeLine(String line) throws IOException {
+        locationWriter.write(line + CR);
+    }
 
+    private void writeAverageLine(String averageLine) throws IOException {
+        averageWriter.write(averageLine + CR);
+    }
 }
