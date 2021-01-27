@@ -18,22 +18,15 @@ public class MetoReporter {
 
     private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
     private String LOC_TIME_FORMAT = "%s %s";
-    private float minTemp = 100.0f;
-    private String minTempLocTime = "";
-    private float maxTemp = -100.0f;
-    private String maxTempLocTime = "";
-    private int maxAfDays = 0;
-    private String maxAfDaysLocTime = "";
-    private float maxSunHours = 0.0f;
-    private String maxSunHoursLocTime = "";
-    private float maxRainfallMm = 0;
-    private String maxRainfallMmLocTime = "";
+    
+    private WeatherExtremesData extremes;
     
     private FileWriter mainWriter;
     private FileWriter locationWriter;
     private FileWriter averageWriter;
 
     public MetoReporter() throws IOException {
+        this.extremes = new WeatherExtremesData();
         this.mainWriter = new FileWriter("/Users/sik/met-office/zz-metoffice-full.txt");
         this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
     }
@@ -93,11 +86,11 @@ public class MetoReporter {
 
     public void printExtremes() throws IOException {
         writeAverageLine("");
-        writeAverageLine(" Lowest Min.Temp C: " + this.minTemp + " (" + this.minTempLocTime + ")");
-        writeAverageLine("Highest Max.Temp C: " + this.maxTemp + " (" + this.maxTempLocTime + ")");
-        writeAverageLine("Highest AF Days   : " + this.maxAfDays + " (" + this.maxAfDaysLocTime + ")");
-        writeAverageLine("Max. Rainfall Mm  : " + this.maxRainfallMm + " (" + this.maxRainfallMmLocTime + ")");
-        writeAverageLine("Max. Sun Hours    : " + this.maxSunHours + " (" + this.maxSunHoursLocTime + ")");
+        writeAverageLine(" Lowest Min.Temp C: " + extremes.getMinTemp() + " (" + extremes.getMinTempLocTime() + ")");
+        writeAverageLine("Highest Max.Temp C: " + extremes.getMaxTemp() + " (" + extremes.getMaxTempLocTime() + ")");
+        writeAverageLine("Highest AF Days   : " + extremes.getMaxAfDays() + " (" + extremes.getMaxAfDaysLocTime() + ")");
+        writeAverageLine("Max. Rainfall Mm  : " + extremes.getMaxRainfallMm() + " (" + extremes.getMaxRainfallMmLocTime() + ")");
+        writeAverageLine("Max. Sun Hours    : " + extremes.getMaxSunHours() + " (" + extremes.getMaxSunHoursLocTime() + ")");
         writeAverageLine("");
     }
 
@@ -122,36 +115,36 @@ public class MetoReporter {
     }
 
     private void updateExtremes(MonthlyWeatherData monthData) {
-        if (monthData.getTempMinC() != null && monthData.getTempMinC() < this.minTemp) {
-            this.minTemp = monthData.getTempMinC();
-            this.minTempLocTime = String.format(LOC_TIME_FORMAT,
+        if (monthData.getTempMinC() != null && monthData.getTempMinC() < this.extremes.getMinTemp()) {
+            this.extremes.setMinTemp(monthData.getTempMinC());
+            this.extremes.setMinTempLocTime(String.format(LOC_TIME_FORMAT,
                     monthData.getStationName(),
-                    monthData.getMonthStartDate().format(YYYY_MM));
+                    monthData.getMonthStartDate().format(YYYY_MM)));
         }
-        if (monthData.getTempMaxC() != null &&monthData.getTempMaxC() > this.maxTemp) {
-            this.maxTemp = monthData.getTempMaxC();
-            this.maxTempLocTime = String.format(LOC_TIME_FORMAT,
+        if (monthData.getTempMaxC() != null &&monthData.getTempMaxC() > this.extremes.getMaxTemp()) {
+            this.extremes.setMaxTemp(monthData.getTempMaxC());
+            this.extremes.setMaxTempLocTime(String.format(LOC_TIME_FORMAT,
                     monthData.getStationName(),
-                    monthData.getMonthStartDate().format(YYYY_MM));
+                    monthData.getMonthStartDate().format(YYYY_MM)));
         }
-        if (monthData.getAfDays() != null && monthData.getAfDays() > this.maxAfDays) {
-            this.maxAfDays = monthData.getAfDays();
-            this.maxAfDaysLocTime = String.format(LOC_TIME_FORMAT,
+        if (monthData.getAfDays() != null && monthData.getAfDays() > this.extremes.getMaxAfDays()) {
+            this.extremes.setMaxAfDays(monthData.getAfDays());
+            this.extremes.setMaxAfDaysLocTime(String.format(LOC_TIME_FORMAT,
                     monthData.getStationName(),
-                    monthData.getMonthStartDate().format(YYYY_MM));
+                    monthData.getMonthStartDate().format(YYYY_MM)));
         }
-        if (monthData.getRainfallMm() != null && monthData.getRainfallMm() > this.maxRainfallMm) {
-            this.maxRainfallMm = monthData.getRainfallMm();
-            this.maxRainfallMmLocTime = String.format(LOC_TIME_FORMAT,
+        if (monthData.getRainfallMm() != null && monthData.getRainfallMm() > this.extremes.getMaxRainfallMm()) {
+            this.extremes.setMaxRainfallMm(monthData.getRainfallMm());
+            this.extremes.setMaxRainfallMmLocTime(String.format(LOC_TIME_FORMAT,
                     monthData.getStationName(),
-                    monthData.getMonthStartDate().format(YYYY_MM));
+                    monthData.getMonthStartDate().format(YYYY_MM)));
         }
 
-        if (monthData.getSunHours() != null && monthData.getSunHours() > this.maxSunHours) {
-            this.maxSunHours = monthData.getSunHours();
-            this.maxSunHoursLocTime = String.format(LOC_TIME_FORMAT,
+        if (monthData.getSunHours() != null && monthData.getSunHours() > this.extremes.getMaxSunHours()) {
+            this.extremes.setMaxSunHours(monthData.getSunHours());
+            this.extremes.setMaxSunHoursLocTime(String.format(LOC_TIME_FORMAT,
                     monthData.getStationName(),
-                    monthData.getMonthStartDate().format(YYYY_MM));
+                    monthData.getMonthStartDate().format(YYYY_MM)));
         }
     }
     
