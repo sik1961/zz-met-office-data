@@ -1,7 +1,6 @@
 package com.sik.meto.data;
 
 import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -11,8 +10,9 @@ public class MetoData {
 
 
     public static void main(String[] args) throws IOException {
-        MetoDataManager manager = new MetoDataManager();
-        MetoReporter reporter = new MetoReporter();
+        MetoDataImporter manager = new MetoDataImporter();
+        //MetoReporter reporter = new MetoReporter();
+        MetoExcelWriter excelWriter = new MetoExcelWriter();
 
         Set<MonthlyWeatherData> weatherData = manager.getMonthlyData();
 
@@ -21,23 +21,17 @@ public class MetoData {
         Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
                 .collect(Collectors.groupingBy(MonthlyWeatherData::getStationName,Collectors.toSet()));
 
-        reporter.printLocations(dataByLocation);
+        //reporter.printLocations(dataByLocation);
 
         //reporter.printRecordsAndSummary(weatherData);
-        reporter.printYearlyAverages(manager.getYearlyAverageWeatherDataMap());
+        //reporter.printYearlyAverages(manager.getYearlyAverageWeatherDataMap());
 
-
-
-
+        excelWriter.writeWorkbook(dataByLocation);
 
 //        sheffData.stream()
 //                .sorted()
 //                .collect(Collectors.toCollection(LinkedHashSet::new))
 //                .forEach(System.out::println);
-
-
-
-
 
     }
 

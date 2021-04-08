@@ -4,15 +4,15 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class MetoDataManagerTest {
+public class MetoDataImporterTest {
 
 	@Test
 	public void test() throws IOException {
 		//fail("Not yet implemented");
 		
-		MetoDataManager reader = new MetoDataManager();
+		MetoDataImporter importer = new MetoDataImporter();
 		
-		reader.getMonthlyData();
+		importer.getMonthlyData();
 		
 		
 		
