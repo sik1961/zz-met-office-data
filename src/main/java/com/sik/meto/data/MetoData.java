@@ -12,7 +12,7 @@ public class MetoData {
 
 
     public static void main(String[] args) throws IOException {
-        MetoDataImporter manager = new MetoDataImporter();
+        MetoDataHandler manager = new MetoDataHandler();
         //MetoReporter reporter = new MetoReporter();
         MetoExcelWriter excelWriter = new MetoExcelWriter();
 
@@ -37,6 +37,7 @@ public class MetoData {
         //reporter.printYearlyAverages(manager.getYearlyAverageWeatherDataMap());
 
         excelWriter.writeHistoricWorkbook(sortedMap);
+        excelWriter.writeSummaryWorkbook(manager.getYearlyAverageWeatherDataMap());
 
 //        sheffData.stream()
 //                .sorted()

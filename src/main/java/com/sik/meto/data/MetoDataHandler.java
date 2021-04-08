@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 //import com.sik.sihols.HolidayEvent;
 import static com.sik.meto.data.MonthlyWeatherData.*;
 
-public class MetoDataImporter {
+public class MetoDataHandler {
 
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
 	private static final String EQ = "=";
@@ -157,6 +157,13 @@ public class MetoDataImporter {
 	public Set<MonthlyWeatherData> filterByStation(final Set<MonthlyWeatherData> monthlyWeatherData, final String stationName) {
 		return monthlyWeatherData.stream()
 				.filter(w -> (w.getStationName().equals(stationName)))
+				.sorted()
+				.collect(Collectors.toCollection(LinkedHashSet::new));
+	}
+
+	public Set<MonthlyWeatherData> filterByYear(final Set<MonthlyWeatherData> monthlyWeatherData, final int year) {
+		return monthlyWeatherData.stream()
+				.filter(w -> (w.getMonthStartDate().getYear()==year))
 				.sorted()
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 	}

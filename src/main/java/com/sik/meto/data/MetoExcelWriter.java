@@ -38,6 +38,8 @@ public class MetoExcelWriter {
         this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
         this.historicFileName = "/Users/sik/met-office/MetOfficeHistoricData.xlsx";
         this.historicOut = new FileOutputStream(this.historicFileName);
+        this.summaryFileName = "/Users/sik/met-office/MetOfficeSummaryData.xlsx";
+        this.summaryOut = new FileOutputStream(this.summaryFileName);
     }
 
     public void writeHistoricWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -59,18 +61,50 @@ public class MetoExcelWriter {
             locationData.get(location).stream()
                     .sorted()
                     .collect(Collectors.toCollection(LinkedHashSet::new))
-                    .forEach(r -> this.writeExcelRow(r,sheet, rowCount.incrementAndGet()));
+                    .forEach(r -> this.writeHistoricRow(r,sheet, rowCount.incrementAndGet()));
         }
         historicOut = new FileOutputStream(historicFileName);
 
         workbook.write(historicOut);
         historicOut.close();
         workbook.close();
-        System.out.println("Excel file has been generated successfully.");
+        System.out.println(historicFileName + " Excel file has been generated successfully.");
     }
 
-    private void writeExcelRow(MonthlyWeatherData monthData, HSSFSheet sheet, int cellNumber) {
-        HSSFRow row = sheet.createRow((short) cellNumber);
+    public void writeSummaryWorkbook(Map<Integer, YearlyAverageWeatherData> averageData) throws IOException {
+        HSSFWorkbook workbook = new HSSFWorkbook();
+
+
+        HSSFSheet sheet = workbook.createSheet("Yearly Averages");
+
+        HSSFRow rowhead = sheet.createRow((short) 0);
+        rowhead.createCell(0).setCellValue("Year");
+        rowhead.createCell(1).setCellValue("Min.Temp");
+        rowhead.createCell(2).setCellValue("Max.Temp");
+        rowhead.createCell(3).setCellValue("FrostDays");
+        rowhead.createCell(4).setCellValue("RainMM");
+        rowhead.createCell(5).setCellValue("SunHours");
+
+//        AtomicInteger rowCount = new AtomicInteger();
+//        averageData.entrySet().stream()
+//                .sorted()
+//                //.collect(Collectors.toCollection(LinkedHashSet::new))
+//                .forEach(r -> this.writeHistoricRow(r.getValue(),sheet, rowCount.incrementAndGet()));
+
+        int rowCount = 1;
+        for (Integer year: averageData.keySet()) {
+            this.writeSummaryRow(averageData.get(year), sheet, rowCount++);
+        }
+        summaryOut = new FileOutputStream(summaryFileName);
+
+        workbook.write(summaryOut);
+        summaryOut.close();
+        workbook.close();
+        System.out.println(summaryFileName + " Excel file has been generated successfully.");
+    }
+
+    private void writeHistoricRow(MonthlyWeatherData monthData, HSSFSheet sheet, int rowNumber) {
+        HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,monthData.getStationName());
         createCell(row,1,monthData.getMonthStartDate().format(YYYY_MM));
         createCell(row,2,monthData.getTempMinC());
@@ -78,8 +112,18 @@ public class MetoExcelWriter {
         createCell(row,4,monthData.getAfDays());
         createCell(row,5,monthData.getRainfallMm());
         createCell(row,6,monthData.getSunHours());
-
     }
+
+    private void writeSummaryRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber) {
+        HSSFRow row = sheet.createRow((short) rowNumber);
+        createCell(row,0,averageData.getYearStartDate().getYear());
+        createCell(row,1,averageData.getAvgTempMinC());
+        createCell(row,2,averageData.getAvgTempMaxC());
+        createCell(row,3,averageData.getAvgAfDays());
+        createCell(row,4,averageData.getAvgRainfallMm());
+        createCell(row,5,averageData.getAvgSunHours());
+    }
+
     private void createCell(HSSFRow row, int column, String value) {
         if (value!=null) {
             row.createCell(column).setCellValue(value);
@@ -88,7 +132,7 @@ public class MetoExcelWriter {
         }
     }
     private void createCell(HSSFRow row, int column, Float value) {
-        if (value!=null) {
+        if (value!=null && !value.isNaN()) {
             row.createCell(column).setCellValue(DF.format(value));
         } else {
             row.createCell(column).setBlank();
