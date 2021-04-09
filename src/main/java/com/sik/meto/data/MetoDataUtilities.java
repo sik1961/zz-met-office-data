@@ -90,6 +90,8 @@ public class MetoDataUtilities {
 
     public Map<String, WeatherExtremesData> buildExtremesMap(Set<MonthlyWeatherData> weatherData) {
         Map<String, WeatherExtremesData> extremes = new TreeMap<>();
+        extremes.put("*All*", this.getExtremes(weatherData));
+
         Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
                 .sorted()
                 .collect(Collectors.groupingBy(MonthlyWeatherData::getStationName,Collectors.toSet()));
