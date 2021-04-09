@@ -42,9 +42,10 @@ public class MetoData {
         excelWriter.writeAveragesWorkbook(sortedMap);
 
         Map<String, WeatherExtremesData> extremes = utilities.buildExtremesMap(weatherData);
-        for (String location: extremes.keySet()) {
-            System.out.println(location + " : " + extremes.get(location));
-        }
+//        for (String location: extremes.keySet()) {
+//            System.out.println(location + " : " + extremes.get(location));
+//        }
+        excelWriter.writeExtremesWorkbook(extremes);
 
 //        sheffData.stream()
 //                .sorted()

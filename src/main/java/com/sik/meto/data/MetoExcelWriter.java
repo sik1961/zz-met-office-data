@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 public class MetoExcelWriter {
 
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
-    private static final DecimalFormat DF = new DecimalFormat("##0.0");
+    private static final DecimalFormat FDF = new DecimalFormat("##0.0");
+    private static final DecimalFormat IDF = new DecimalFormat("##0");
     private static final String CR = "\n";
 
     private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
@@ -33,16 +34,18 @@ public class MetoExcelWriter {
     private FileOutputStream historicOut;
     private String summaryFileName;
     private FileOutputStream summaryOut;
-
+    private String extremesFileName;
+    private FileOutputStream extremesOut;
 
     public MetoExcelWriter() throws IOException {
-        //this.extremes = new WeatherExtremesData();
         this.mainWriter = new FileWriter("/Users/sik/met-office/zz-metoffice-full.txt");
         this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
         this.historicFileName = "/Users/sik/met-office/MetOfficeHistoricData.xlsx";
         this.historicOut = new FileOutputStream(this.historicFileName);
         this.summaryFileName = "/Users/sik/met-office/MetOfficeYearlyAverages.xlsx";
         this.summaryOut = new FileOutputStream(this.summaryFileName);
+        this.extremesFileName = "/Users/sik/met-office/MetOfficeExtremes.xlsx";
+        this.extremesOut = new FileOutputStream(this.extremesFileName);
     }
 
     public void writeHistoricWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -66,7 +69,6 @@ public class MetoExcelWriter {
                     .collect(Collectors.toCollection(LinkedHashSet::new))
                     .forEach(r -> this.writeHistoricRow(r,sheet, rowCount.incrementAndGet()));
         }
-        historicOut = new FileOutputStream(historicFileName);
 
         workbook.write(historicOut);
         historicOut.close();
@@ -86,11 +88,67 @@ public class MetoExcelWriter {
             this.createAveragesWorksheet(location, workbook, utility.buildYearlyAvarageWeatherDataMap(locationData.get(location)));
         }
 
-        summaryOut = new FileOutputStream(summaryFileName);
         workbook.write(summaryOut);
         summaryOut.close();
         workbook.close();
         System.out.println(summaryFileName + " Excel file has been generated successfully.");
+    }
+
+    public void writeExtremesWorkbook(Map<String, WeatherExtremesData> extremesData) throws IOException {
+        HSSFWorkbook workbook = new HSSFWorkbook();
+
+        HSSFSheet sheet = workbook.createSheet("Extremes");
+
+        HSSFRow rowhead = sheet.createRow((short) 0);
+        rowhead.createCell(0).setCellValue("Name");
+        rowhead.createCell(1).setCellValue("Loc/Time");
+        rowhead.createCell(2).setCellValue("Extreme");
+        rowhead.createCell(3).setCellValue("Value");
+
+        int rowNumber = 1;
+        for(String location: extremesData.keySet()) {
+            rowNumber = this.writeExtremesRows(sheet,location, extremesData.get(location),rowNumber);
+        }
+
+        workbook.write(extremesOut);
+        extremesOut.close();
+        workbook.close();
+        System.out.println(extremesFileName + " Excel file has been generated successfully.");
+    }
+
+    private int writeExtremesRows(HSSFSheet sheet, String location, WeatherExtremesData weatherExtremesData, int row) {
+        HSSFRow minTemp = sheet.createRow((short) row);
+        createCell(minTemp,0,location);
+        createCell(minTemp,1,weatherExtremesData.getMinTempLocTime());
+        createCell(minTemp,2,"Min.Temp");
+        createCell(minTemp,3,weatherExtremesData.getMinTemp());
+        row++;
+        HSSFRow maxTemp = sheet.createRow((short) row);
+        createCell(maxTemp,0,location);
+        createCell(maxTemp,1,weatherExtremesData.getMaxTempLocTime());
+        createCell(maxTemp,2,"Max.Temp");
+        createCell(maxTemp,3,weatherExtremesData.getMaxTemp());
+        row++;
+        HSSFRow maxRain = sheet.createRow((short) row);
+        createCell(maxRain,0,location);
+        createCell(maxRain,1,weatherExtremesData.getMaxRainfallMmLocTime());
+        createCell(maxRain,2,"Max.RainfallMM");
+        createCell(maxRain,3,weatherExtremesData.getMaxRainfallMm());
+        row++;
+        HSSFRow maxAFD = sheet.createRow((short) row);
+        createCell(maxAFD,0,location);
+        createCell(maxAFD,1,weatherExtremesData.getMaxAfDaysLocTime());
+        createCell(maxAFD,2,"Max.AFDays");
+        createCell(maxAFD,3,weatherExtremesData.getMaxAfDays());
+        row++;
+        HSSFRow maxSun = sheet.createRow((short) row);
+        createCell(maxSun,0,location);
+        createCell(maxSun,1,weatherExtremesData.getMaxSunHoursLocTime());
+        createCell(maxSun,2,"Max.SunHours");
+        createCell(maxSun,3,weatherExtremesData.getMaxSunHours());
+        row++;
+        row++;
+        return row;
     }
 
     private void createAveragesWorksheet(String name, HSSFWorkbook workbook, Map<Integer, YearlyAverageWeatherData> averageData) {
@@ -150,7 +208,7 @@ public class MetoExcelWriter {
     }
     private void createCell(HSSFRow row, int column, Float value) {
         if (value!=null && !value.isNaN()) {
-            row.createCell(column).setCellValue(DF.format(value));
+            row.createCell(column).setCellValue(FDF.format(value));
         } else {
             row.createCell(column).setBlank();
         }
@@ -158,7 +216,7 @@ public class MetoExcelWriter {
 
     private void createCell(HSSFRow row, int column, Integer value) {
         if (value!=null) {
-            row.createCell(column).setCellValue(value);
+            row.createCell(column).setCellValue(IDF.format(value));
         } else {
             row.createCell(column).setBlank();
         }
