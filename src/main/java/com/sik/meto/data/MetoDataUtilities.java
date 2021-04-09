@@ -2,10 +2,7 @@ package com.sik.meto.data;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sik.meto.data.MonthlyWeatherData.I_MNTH;
@@ -89,6 +86,60 @@ public class MetoDataUtilities {
                 .countSunHours(existing.getCountSunHours() + (monthlyWeatherData.getSunHours()!=null?1:0))
                 .totSunHours(existing.getTotSunHours() + (monthlyWeatherData.getSunHours()!=null?monthlyWeatherData.getSunHours():0))
                 .build();
+    }
+
+    public Map<String, WeatherExtremesData> buildExtremesMap(Set<MonthlyWeatherData> weatherData) {
+        Map<String, WeatherExtremesData> extremes = new TreeMap<>();
+        Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
+                .sorted()
+                .collect(Collectors.groupingBy(MonthlyWeatherData::getStationName,Collectors.toSet()));
+        for (String location: dataByLocation.keySet()) {
+            extremes.put(location, this.getExtremes(dataByLocation.get(location)));
+        }
+        return extremes;
+    }
+
+    private WeatherExtremesData getExtremes(Set<MonthlyWeatherData> weatherData) {
+        WeatherExtremesData extremes = new WeatherExtremesData();
+        for (MonthlyWeatherData month: weatherData) {
+            extremes = this.updateExtremes(extremes, month);
+        }
+        return extremes;
+    }
+
+    private WeatherExtremesData updateExtremes(WeatherExtremesData extremes, MonthlyWeatherData monthData) {
+
+        if (monthData.getTempMinC() != null && monthData.getTempMinC() < extremes.getMinTemp()) {
+            extremes.setMinTemp(monthData.getTempMinC());
+            extremes.setMinTempLocTime(String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM)));
+        }
+        if (monthData.getTempMaxC() != null &&monthData.getTempMaxC() > extremes.getMaxTemp()) {
+            extremes.setMaxTemp(monthData.getTempMaxC());
+            extremes.setMaxTempLocTime(String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM)));
+        }
+        if (monthData.getAfDays() != null && monthData.getAfDays() > extremes.getMaxAfDays()) {
+            extremes.setMaxAfDays(monthData.getAfDays());
+            extremes.setMaxAfDaysLocTime(String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM)));
+        }
+        if (monthData.getRainfallMm() != null && monthData.getRainfallMm() > extremes.getMaxRainfallMm()) {
+            extremes.setMaxRainfallMm(monthData.getRainfallMm());
+            extremes.setMaxRainfallMmLocTime(String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM)));
+        }
+        if (monthData.getSunHours() != null && monthData.getSunHours() > extremes.getMaxSunHours()) {
+            extremes.setMaxSunHours(monthData.getSunHours());
+            extremes.setMaxSunHoursLocTime(String.format(LOC_TIME_FORMAT,
+                    monthData.getStationName(),
+                    monthData.getMonthStartDate().format(YYYY_MM)));
+        }
+        return extremes;
     }
 
     public Float intToFloat(Integer i) {

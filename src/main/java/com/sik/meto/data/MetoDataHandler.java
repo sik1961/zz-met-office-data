@@ -115,7 +115,7 @@ public class MetoDataHandler {
 				if (monthData != null) {
 					this.yearlyAverageWeatherDataMap = this.updateYearlyAvarageWeatherDataMap(monthData, this.yearlyAverageWeatherDataMap);
 					monthlyWeatherDataSet.add(monthData);
-					this.updateExtremes(monthData);
+					//this.updateExtremes(monthData);
 				}
 
 			}
@@ -161,38 +161,7 @@ public class MetoDataHandler {
 
 
 
-	private void updateExtremes(MonthlyWeatherData monthData) {
-		if (monthData.getTempMinC() != null && monthData.getTempMinC() < this.extremes.getMinTemp()) {
-			this.extremes.setMinTemp(monthData.getTempMinC());
-			this.extremes.setMinTempLocTime(String.format(LOC_TIME_FORMAT,
-					monthData.getStationName(),
-					monthData.getMonthStartDate().format(YYYY_MM)));
-		}
-		if (monthData.getTempMaxC() != null &&monthData.getTempMaxC() > this.extremes.getMaxTemp()) {
-			this.extremes.setMaxTemp(monthData.getTempMaxC());
-			this.extremes.setMaxTempLocTime(String.format(LOC_TIME_FORMAT,
-					monthData.getStationName(),
-					monthData.getMonthStartDate().format(YYYY_MM)));
-		}
-		if (monthData.getAfDays() != null && monthData.getAfDays() > this.extremes.getMaxAfDays()) {
-			this.extremes.setMaxAfDays(monthData.getAfDays());
-			this.extremes.setMaxAfDaysLocTime(String.format(LOC_TIME_FORMAT,
-					monthData.getStationName(),
-					monthData.getMonthStartDate().format(YYYY_MM)));
-		}
-		if (monthData.getRainfallMm() != null && monthData.getRainfallMm() > this.extremes.getMaxRainfallMm()) {
-			this.extremes.setMaxRainfallMm(monthData.getRainfallMm());
-			this.extremes.setMaxRainfallMmLocTime(String.format(LOC_TIME_FORMAT,
-					monthData.getStationName(),
-					monthData.getMonthStartDate().format(YYYY_MM)));
-		}
-		if (monthData.getSunHours() != null && monthData.getSunHours() > this.extremes.getMaxSunHours()) {
-			this.extremes.setMaxSunHours(monthData.getSunHours());
-			this.extremes.setMaxSunHoursLocTime(String.format(LOC_TIME_FORMAT,
-					monthData.getStationName(),
-					monthData.getMonthStartDate().format(YYYY_MM)));
-		}
-	}
+
 
 
 
