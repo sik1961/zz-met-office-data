@@ -13,12 +13,13 @@ public class MetoData {
 
     public static void main(String[] args) throws IOException {
         MetoDataHandler manager = new MetoDataHandler();
+        MetoDataUtilities utilities = new MetoDataUtilities();
         //MetoReporter reporter = new MetoReporter();
         MetoExcelWriter excelWriter = new MetoExcelWriter();
 
         Set<MonthlyWeatherData> weatherData = manager.getMonthlyData();
 
-        Set<MonthlyWeatherData> locationSpecificData = manager.filterByStation(weatherData, "Paisley");
+        Set<MonthlyWeatherData> locationSpecificData = utilities.filterByStation(weatherData, "Paisley");
 
         Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
                 .sorted()
@@ -37,7 +38,8 @@ public class MetoData {
         //reporter.printYearlyAverages(manager.getYearlyAverageWeatherDataMap());
 
         excelWriter.writeHistoricWorkbook(sortedMap);
-        excelWriter.writeSummaryWorkbook(manager.getYearlyAverageWeatherDataMap());
+
+        excelWriter.writeAveragesWorkbook(sortedMap);
 
 //        sheffData.stream()
 //                .sorted()

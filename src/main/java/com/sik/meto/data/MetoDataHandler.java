@@ -21,13 +21,11 @@ public class MetoDataHandler {
 
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
 	private static final String EQ = "=";
-	private static final String AX = "\\*";
-	private static final String HASH = "#";
-	private static final String DOLLAR = "$";
-	private static final String MT = "";
 	private static final String SPACES = " +";
 	private String LOC_TIME_FORMAT = "%s %s";
 	private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
+
+	MetoDataUtilities util = new MetoDataUtilities();
 
 	private Map<String, String> urlMap = new HashMap<>();
 	private Map<Integer, YearlyAverageWeatherData> yearlyAverageWeatherDataMap = new TreeMap<>();
@@ -76,7 +74,7 @@ public class MetoDataHandler {
 //				for (String s:inputLine.split(SPACES)) {
 //					System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>" + s);
 //				}
-				if (isLocationData(inputLine)) {
+				if (util.isLocationData(inputLine)) {
 					location = inputLine;
 				}
 
@@ -90,26 +88,26 @@ public class MetoDataHandler {
 //				System.out.println(" fields.length=" + fields.length);
 
 				MonthlyWeatherData monthData = null;
-				if (this.isMonthlyData(fields)) {
+				if (util.isMonthlyData(fields)) {
 					if (fields.length >= 8) {
 						monthData = MonthlyWeatherData.builder()
 								.stationName(weatherStation)
 								.stationLocation(location)
-								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
-								.tempMaxC(getFloat(fields[I_TMAX]))
-								.tempMinC(getFloat(fields[I_TMIN]))
-								.afDays(getInt(fields[I_AFDY]))
-								.rainfallMm(getFloat(fields[I_RNMM]))
-								.sunHours(getFloat(fields[I_SUNH])).build();
+								.monthStartDate(util.getMonthStartDate(util.getInt(fields[I_YEAR]), util.getInt(fields[I_MNTH])))
+								.tempMaxC(util.getFloat(fields[I_TMAX]))
+								.tempMinC(util.getFloat(fields[I_TMIN]))
+								.afDays(util.getInt(fields[I_AFDY]))
+								.rainfallMm(util.getFloat(fields[I_RNMM]))
+								.sunHours(util.getFloat(fields[I_SUNH])).build();
 					} else if (fields.length == 7) {
 						monthData = MonthlyWeatherData.builder()
 								.stationName(weatherStation)
 								.stationLocation(location)
-								.monthStartDate(this.getMonthStartDate(getInt(fields[I_YEAR]), getInt(fields[I_MNTH])))
-								.tempMaxC(getFloat(fields[I_TMAX]))
-								.tempMinC(getFloat(fields[I_TMIN]))
-								.afDays(getInt(fields[I_AFDY]))
-								.rainfallMm(getFloat(fields[I_RNMM])).build();
+								.monthStartDate(util.getMonthStartDate(util.getInt(fields[I_YEAR]), util.getInt(fields[I_MNTH])))
+								.tempMaxC(util.getFloat(fields[I_TMAX]))
+								.tempMinC(util.getFloat(fields[I_TMIN]))
+								.afDays(util.getInt(fields[I_AFDY]))
+								.rainfallMm(util.getFloat(fields[I_RNMM])).build();
 					} else {
 						System.out.println("Warn: " + inputLine + " #fields=" + fields.length);
 					}
@@ -133,7 +131,7 @@ public class MetoDataHandler {
 		Map<String, String> retVal = new HashMap<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(IMPORT_FILE))) {
 			for (String line; (line = br.readLine()) != null;) {
-				if (isValidUrlProperty(line)) {
+				if (util.isValidUrlProperty(line)) {
 					retVal.put(line.split(EQ)[0], line.split(EQ)[1]);
 				}
 			}
@@ -146,72 +144,22 @@ public class MetoDataHandler {
 		return retVal;
 	}
 
-	public Set<MonthlyWeatherData> filterByDates(final Set<MonthlyWeatherData> monthlyWeatherData, final LocalDate start, final LocalDate end) {
-		return monthlyWeatherData.stream()
-				.filter(w -> (w.getMonthStartDate().isEqual(start) || w.getMonthStartDate().isAfter(start)) &&
-						w.getMonthStartDate().isBefore(end))
-				.sorted()
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-	}
 
-	public Set<MonthlyWeatherData> filterByStation(final Set<MonthlyWeatherData> monthlyWeatherData, final String stationName) {
-		return monthlyWeatherData.stream()
-				.filter(w -> (w.getStationName().equals(stationName)))
-				.sorted()
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-	}
-
-	public Set<MonthlyWeatherData> filterByYear(final Set<MonthlyWeatherData> monthlyWeatherData, final int year) {
-		return monthlyWeatherData.stream()
-				.filter(w -> (w.getMonthStartDate().getYear()==year))
-				.sorted()
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-	}
 
 	public Map<Integer,YearlyAverageWeatherData> updateYearlyAvarageWeatherDataMap(final MonthlyWeatherData monthlyWeatherData,
 																				   final Map<Integer,YearlyAverageWeatherData> yearlyAverageWeatherDataMap) {
 		YearlyAverageWeatherData existing = yearlyAverageWeatherDataMap.get(monthlyWeatherData.getMonthStartDate().getYear());
 		if (existing == null) {
-			yearlyAverageWeatherDataMap.put(monthlyWeatherData.getMonthStartDate().getYear(), createYearAverageData(monthlyWeatherData));
+			yearlyAverageWeatherDataMap.put(monthlyWeatherData.getMonthStartDate().getYear(), util.createYearAverageData(monthlyWeatherData));
 		} else {
-			yearlyAverageWeatherDataMap.put(existing.getYearStartDate().getYear(),updateYearAverageData(monthlyWeatherData, existing));
+			yearlyAverageWeatherDataMap.put(existing.getYearStartDate().getYear(),util.updateYearAverageData(monthlyWeatherData, existing));
 		}
 		return yearlyAverageWeatherDataMap;
 	}
 
-	private YearlyAverageWeatherData createYearAverageData(MonthlyWeatherData monthlyWeatherData) {
-		return YearlyAverageWeatherData.builder()
-				.yearStartDate(getYearStartDate(monthlyWeatherData.getMonthStartDate().getYear()))
-				.countTempMaxC(monthlyWeatherData.getTempMaxC()!=null?1:0)
-				.totTempMaxC(monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0)
-				.countTempMinC(monthlyWeatherData.getTempMinC()!=null?1:0)
-				.totTempMinC(monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0)
-				.countAfDays(monthlyWeatherData.getAfDays()!=null?1:0)
-				.totAfDays(monthlyWeatherData.getAfDays()!=null?intToFloat(monthlyWeatherData.getAfDays()):0)
-				.countRainfallMm(monthlyWeatherData.getRainfallMm()!=null?1:0)
-				.totRainfallMm(monthlyWeatherData.getRainfallMm()!=null?monthlyWeatherData.getRainfallMm():0)
-				.countSunHours(monthlyWeatherData.getSunHours()!=null?1:0)
-				.totSunHours(monthlyWeatherData.getSunHours()!=null?monthlyWeatherData.getSunHours():0)
-				.build();
 
-	}
 
-	private YearlyAverageWeatherData updateYearAverageData(MonthlyWeatherData monthlyWeatherData,
-														   YearlyAverageWeatherData existing) {
-		return YearlyAverageWeatherData.builder()
-				.yearStartDate(existing.getYearStartDate())
-				.countTempMaxC(existing.getCountTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?1:0))
-				.totTempMaxC(existing.getTotTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0))
-				.countTempMinC(existing.getCountTempMinC() + (monthlyWeatherData.getTempMinC()!=null?1:0))
-				.totTempMinC(existing.getTotTempMinC() + (monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0))
-				.countAfDays(existing.getCountAfDays() + (monthlyWeatherData.getAfDays()!=null?1:0))
-				.totAfDays(existing.getTotAfDays() + (monthlyWeatherData.getAfDays()!=null?intToFloat(monthlyWeatherData.getAfDays()):0))
-				.countRainfallMm(existing.getCountRainfallMm() + (monthlyWeatherData.getRainfallMm()!=null?1:0))
-				.totRainfallMm(existing.getTotRainfallMm() + (monthlyWeatherData.getRainfallMm()!=null?monthlyWeatherData.getRainfallMm():0))
-				.countSunHours(existing.getCountSunHours() + (monthlyWeatherData.getSunHours()!=null?1:0))
-				.totSunHours(existing.getTotSunHours() + (monthlyWeatherData.getSunHours()!=null?monthlyWeatherData.getSunHours():0))
-				.build();
-	}
+
 
 	private void updateExtremes(MonthlyWeatherData monthData) {
 		if (monthData.getTempMinC() != null && monthData.getTempMinC() < this.extremes.getMinTemp()) {
@@ -246,68 +194,6 @@ public class MetoDataHandler {
 		}
 	}
 
-	private Float intToFloat(Integer i) {
-		return Float.parseFloat(i.toString());
-	}
 
-	private LocalDate getMonthStartDate(final int year, final int month) {
-		return LocalDate.of(year, month, 1);
-	}
-
-	private LocalDate getYearStartDate(final int year) {
-		return LocalDate.of(year, 1, 1);
-	}
-
-	private boolean isValidUrlProperty(String s) {
-		return s.indexOf(EQ) > 1 && s.split(EQ).length == 2;
-	}
-
-	private boolean isMonthlyData(String[] fields) {
-		return fields != null &&
-			fields.length >= 6 &&
-			isNumeric(fields[I_YEAR]) &&
-			isNumeric(fields[I_MNTH]);
-	}
-
-	private boolean isLocationData(String s) {
-		return s != null &&
-				s.contains(MonthlyWeatherData.LOC) &&
-				s.contains(MonthlyWeatherData.LAT) &&
-				s.contains(MonthlyWeatherData.LON);
-	}
-
-	private Integer getInt(String i) {
-		try {
-			return Integer.parseInt(strip(i));
-		}
-		catch(NumberFormatException nfe) {
-			return null;
-		}
-	}
-
-	private Float getFloat(String i) {
-		try {
-			return Float.parseFloat(strip(i));
-		}
-		catch(NumberFormatException nfe) {
-			return null;
-		}
-	}
-
-	private boolean isNumeric(String i) {
-		try {
-			Float.parseFloat(strip(i));
-		}
-		catch(NumberFormatException nfe) {
-			return false;
-		}
-		return true;
-	}
-
-	private String strip(String s) {
-		return s.replaceAll(AX, MT)
-				.replaceAll(HASH,MT)
-				.replaceAll(DOLLAR,MT);
-	}
 
 }

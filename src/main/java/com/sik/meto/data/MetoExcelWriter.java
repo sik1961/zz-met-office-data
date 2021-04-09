@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,8 @@ public class MetoExcelWriter {
     private static final String CR = "\n";
 
     private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
+
+    MetoDataUtilities utility = new MetoDataUtilities();
 
     private FileWriter mainWriter;
     private FileWriter locationWriter;
@@ -38,7 +41,7 @@ public class MetoExcelWriter {
         this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
         this.historicFileName = "/Users/sik/met-office/MetOfficeHistoricData.xlsx";
         this.historicOut = new FileOutputStream(this.historicFileName);
-        this.summaryFileName = "/Users/sik/met-office/MetOfficeSummaryData.xlsx";
+        this.summaryFileName = "/Users/sik/met-office/MetOfficeYearlyAverages.xlsx";
         this.summaryOut = new FileOutputStream(this.summaryFileName);
     }
 
@@ -71,19 +74,38 @@ public class MetoExcelWriter {
         System.out.println(historicFileName + " Excel file has been generated successfully.");
     }
 
-    public void writeSummaryWorkbook(Map<Integer, YearlyAverageWeatherData> averageData) throws IOException {
+    public void writeAveragesWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
+        Set<MonthlyWeatherData> everything = new HashSet<>();
+        locationData.entrySet().forEach(m -> everything.addAll(m.getValue()));
+
         HSSFWorkbook workbook = new HSSFWorkbook();
 
+        this.createAveragesWorksheet("All", workbook, utility.buildYearlyAvarageWeatherDataMap(everything));
 
-        HSSFSheet sheet = workbook.createSheet("Yearly Averages");
+        for (String location: locationData.keySet()) {
+            this.createAveragesWorksheet(location, workbook, utility.buildYearlyAvarageWeatherDataMap(locationData.get(location)));
+        }
+
+        summaryOut = new FileOutputStream(summaryFileName);
+        workbook.write(summaryOut);
+        summaryOut.close();
+        workbook.close();
+        System.out.println(summaryFileName + " Excel file has been generated successfully.");
+    }
+
+    private void createAveragesWorksheet(String name, HSSFWorkbook workbook, Map<Integer, YearlyAverageWeatherData> averageData) {
+
+
+        HSSFSheet sheet = workbook.createSheet(name);
 
         HSSFRow rowhead = sheet.createRow((short) 0);
-        rowhead.createCell(0).setCellValue("Year");
-        rowhead.createCell(1).setCellValue("Min.Temp");
-        rowhead.createCell(2).setCellValue("Max.Temp");
-        rowhead.createCell(3).setCellValue("FrostDays");
-        rowhead.createCell(4).setCellValue("RainMM");
-        rowhead.createCell(5).setCellValue("SunHours");
+        rowhead.createCell(0).setCellValue("Location");
+        rowhead.createCell(1).setCellValue("Year");
+        rowhead.createCell(2).setCellValue("Min.Temp");
+        rowhead.createCell(3).setCellValue("Max.Temp");
+        rowhead.createCell(4).setCellValue("FrostDays");
+        rowhead.createCell(5).setCellValue("RainMM");
+        rowhead.createCell(6).setCellValue("SunHours");
 
 //        AtomicInteger rowCount = new AtomicInteger();
 //        averageData.entrySet().stream()
@@ -93,14 +115,8 @@ public class MetoExcelWriter {
 
         int rowCount = 1;
         for (Integer year: averageData.keySet()) {
-            this.writeSummaryRow(averageData.get(year), sheet, rowCount++);
+            this.writeAveragesRow(averageData.get(year), sheet, rowCount++, name);
         }
-        summaryOut = new FileOutputStream(summaryFileName);
-
-        workbook.write(summaryOut);
-        summaryOut.close();
-        workbook.close();
-        System.out.println(summaryFileName + " Excel file has been generated successfully.");
     }
 
     private void writeHistoricRow(MonthlyWeatherData monthData, HSSFSheet sheet, int rowNumber) {
@@ -114,14 +130,15 @@ public class MetoExcelWriter {
         createCell(row,6,monthData.getSunHours());
     }
 
-    private void writeSummaryRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber) {
+    private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
         HSSFRow row = sheet.createRow((short) rowNumber);
-        createCell(row,0,averageData.getYearStartDate().getYear());
-        createCell(row,1,averageData.getAvgTempMinC());
-        createCell(row,2,averageData.getAvgTempMaxC());
-        createCell(row,3,averageData.getAvgAfDays());
-        createCell(row,4,averageData.getAvgRainfallMm());
-        createCell(row,5,averageData.getAvgSunHours());
+        createCell(row,0,location);
+        createCell(row,1,averageData.getYearStartDate().getYear());
+        createCell(row,2,averageData.getAvgTempMinC());
+        createCell(row,3,averageData.getAvgTempMaxC());
+        createCell(row,4,averageData.getAvgAfDays());
+        createCell(row,5,averageData.getAvgRainfallMm());
+        createCell(row,6,averageData.getAvgSunHours());
     }
 
     private void createCell(HSSFRow row, int column, String value) {
