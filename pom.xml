@@ -2,8 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sik.meto</groupId>
   <artifactId>zz-met-office-data</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <name>Met Office Data Analyser</name>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.3.9.RELEASE</version>
+		<relativePath/>
+	</parent>
   <build>
 		<plugins>
 			<plugin>
@@ -67,6 +73,38 @@
 		  <version>RELEASE</version>
 		  <scope>compile</scope>
 	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-parent</artifactId>
+		  <version>2.3.9.RELEASE</version>
+		  <type>pom</type>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-security</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-actuator</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-web</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-test</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.security</groupId>
+		  <artifactId>spring-security-web</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.security</groupId>
+		  <artifactId>spring-security-config</artifactId>
+	  </dependency>
+
 
   </dependencies>
 </project>

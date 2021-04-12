@@ -1,8 +1,14 @@
-package com.sik.meto.data;
+package com.sik.meto.data.service;
 
+import com.sik.meto.data.model.MonthlyWeatherData;
+import com.sik.meto.data.model.WeatherExtremesData;
+import com.sik.meto.data.model.YearlyAverageWeatherData;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,8 +21,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@Component
 public class MetoExcelWriter {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MetoExcelWriter.class);
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
     private static final DecimalFormat FDF = new DecimalFormat("##0.0");
     private static final DecimalFormat IDF = new DecimalFormat("##0");
@@ -65,7 +73,7 @@ public class MetoExcelWriter {
         workbook.write(historicOut);
         historicOut.close();
         workbook.close();
-        System.out.println(historicFileName + " Excel file has been generated successfully.");
+        LOG.info(historicFileName + " Excel file has been generated successfully.");
     }
 
     public void writeAveragesWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -83,7 +91,7 @@ public class MetoExcelWriter {
         workbook.write(summaryOut);
         summaryOut.close();
         workbook.close();
-        System.out.println(summaryFileName + " Excel file has been generated successfully.");
+        LOG.info(summaryFileName + " Excel file has been generated successfully.");
     }
 
     public void writeExtremesWorkbook(Map<String, WeatherExtremesData> extremesData) throws IOException {
@@ -105,7 +113,7 @@ public class MetoExcelWriter {
         workbook.write(extremesOut);
         extremesOut.close();
         workbook.close();
-        System.out.println(extremesFileName + " Excel file has been generated successfully.");
+        LOG.info(extremesFileName + " Excel file has been generated successfully.");
     }
 
     private int writeExtremesRows(HSSFSheet sheet, String location, WeatherExtremesData weatherExtremesData, int row) {

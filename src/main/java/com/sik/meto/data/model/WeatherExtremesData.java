@@ -1,4 +1,4 @@
-package com.sik.meto.data;
+package com.sik.meto.data.model;
 
 import lombok.Data;
 

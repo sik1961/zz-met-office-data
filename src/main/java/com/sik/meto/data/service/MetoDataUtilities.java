@@ -1,15 +1,24 @@
-package com.sik.meto.data;
+package com.sik.meto.data.service;
+
+import com.sik.meto.data.model.MonthlyWeatherData;
+import com.sik.meto.data.model.WeatherExtremesData;
+import com.sik.meto.data.model.YearlyAverageWeatherData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.sik.meto.data.MonthlyWeatherData.I_MNTH;
-import static com.sik.meto.data.MonthlyWeatherData.I_YEAR;
+import static com.sik.meto.data.model.MonthlyWeatherData.I_MNTH;
+import static com.sik.meto.data.model.MonthlyWeatherData.I_YEAR;
 
+@Component
 public class MetoDataUtilities {
 
+    //private static final Logger LOG = LoggerFactory.getLogger(MetoDataUtilities.class);
     private static final String EQ = "=";
     private static final String AX = "\\*";
     private static final String HASH = "#";
@@ -40,7 +49,7 @@ public class MetoDataUtilities {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public Map<Integer,YearlyAverageWeatherData> buildYearlyAvarageWeatherDataMap(final Set<MonthlyWeatherData> monthlyWeatherData) {
+    public Map<Integer, YearlyAverageWeatherData> buildYearlyAvarageWeatherDataMap(final Set<MonthlyWeatherData> monthlyWeatherData) {
         Map<Integer, YearlyAverageWeatherData> yearlyAverageDataMap = new TreeMap<>();
         for (MonthlyWeatherData month: monthlyWeatherData) {
             YearlyAverageWeatherData existing = yearlyAverageDataMap.get(month.getMonthStartDate().getYear());

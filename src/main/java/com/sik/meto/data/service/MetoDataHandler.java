@@ -1,5 +1,11 @@
 
-package com.sik.meto.data;
+package com.sik.meto.data.service;
+
+import com.sik.meto.data.Application;
+import com.sik.meto.data.model.MonthlyWeatherData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -8,9 +14,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
-import static com.sik.meto.data.MonthlyWeatherData.*;
+import static com.sik.meto.data.model.MonthlyWeatherData.*;
 
+@Component
 public class MetoDataHandler {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MetoDataHandler.class);
 
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
 	private static final String EQ = "=";
@@ -20,7 +29,7 @@ public class MetoDataHandler {
 
 	private Map<String, String> urlMap = new HashMap<>();
 
-	protected Set<MonthlyWeatherData> getMonthlyData() throws IOException {
+	public Set<MonthlyWeatherData> getMonthlyData() throws IOException {
 		Set<MonthlyWeatherData> monthlyData = new TreeSet<>();
 
 		this.urlMap = this.buildUrlMap(IMPORT_FILE);
@@ -29,14 +38,14 @@ public class MetoDataHandler {
 			monthlyData.addAll(readMonthlyDataFromUrl(weatherStation));
 		}
 
-		System.out.println("records=" + monthlyData.size());
+		LOG.info("records=" + monthlyData.size());
 
 		return monthlyData;
 
 	}
 
 	private Set<MonthlyWeatherData> readMonthlyDataFromUrl(String weatherStation) throws IOException {
-		System.out.println("Getting: " + urlMap.get(weatherStation));
+		LOG.info("Getting: " + urlMap.get(weatherStation));
 		Set<MonthlyWeatherData> monthlyWeatherDataSet = new TreeSet<>();
 		int linesInFile=0;
 		String location = "n/a";
@@ -76,7 +85,7 @@ public class MetoDataHandler {
 								.afDays(util.getInt(fields[I_AFDY]))
 								.rainfallMm(util.getFloat(fields[I_RNMM])).build();
 					} else {
-						System.out.println("Warn: " + inputLine + " #fields=" + fields.length);
+						LOG.info("Warn: " + inputLine + " #fields=" + fields.length);
 					}
 				}
 				if (monthData != null) {
@@ -87,7 +96,7 @@ public class MetoDataHandler {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		System.out.println("lines=" + linesInFile + " records=" + monthlyWeatherDataSet.size());
+		LOG.info("lines=" + linesInFile + " records=" + monthlyWeatherDataSet.size());
 		br.close();
 		return monthlyWeatherDataSet;
 	}
