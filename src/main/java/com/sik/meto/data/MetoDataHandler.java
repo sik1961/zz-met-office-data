@@ -6,15 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
-
-//import com.sik.sihols.HolidayEvent;
 import static com.sik.meto.data.MonthlyWeatherData.*;
 
 public class MetoDataHandler {
@@ -22,23 +15,10 @@ public class MetoDataHandler {
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
 	private static final String EQ = "=";
 	private static final String SPACES = " +";
-	private String LOC_TIME_FORMAT = "%s %s";
-	private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
 
 	MetoDataUtilities util = new MetoDataUtilities();
 
 	private Map<String, String> urlMap = new HashMap<>();
-	private Map<Integer, YearlyAverageWeatherData> yearlyAverageWeatherDataMap = new TreeMap<>();
-	private WeatherExtremesData extremes = new WeatherExtremesData();
-
-
-	public Map<Integer, YearlyAverageWeatherData> getYearlyAverageWeatherDataMap() {
-		return this.yearlyAverageWeatherDataMap;
-	}
-
-	public WeatherExtremesData getExtremes() {
-		return this.extremes;
-	}
 
 	protected Set<MonthlyWeatherData> getMonthlyData() throws IOException {
 		Set<MonthlyWeatherData> monthlyData = new TreeSet<>();
@@ -50,11 +30,7 @@ public class MetoDataHandler {
 		}
 
 		System.out.println("records=" + monthlyData.size());
-		
-//		for (MonthlyWeatherData month:monthlyData) {
-//			System.out.println(month);
-//		}
-		
+
 		return monthlyData;
 
 	}
@@ -71,21 +47,12 @@ public class MetoDataHandler {
 			String inputLine;
 			while ((inputLine = br.readLine()) != null) {
 				linesInFile++;
-//				for (String s:inputLine.split(SPACES)) {
-//					System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>" + s);
-//				}
+
 				if (util.isLocationData(inputLine)) {
 					location = inputLine;
 				}
 
-
 				String[] fields = inputLine.split(SPACES);
-
-//				System.out.print(">>");
-//				for (String f:fields) {
-//					System.out.print(f + " ");
-//				}
-//				System.out.println(" fields.length=" + fields.length);
 
 				MonthlyWeatherData monthData = null;
 				if (util.isMonthlyData(fields)) {
@@ -113,9 +80,7 @@ public class MetoDataHandler {
 					}
 				}
 				if (monthData != null) {
-					this.yearlyAverageWeatherDataMap = this.updateYearlyAvarageWeatherDataMap(monthData, this.yearlyAverageWeatherDataMap);
 					monthlyWeatherDataSet.add(monthData);
-					//this.updateExtremes(monthData);
 				}
 
 			}
@@ -127,42 +92,21 @@ public class MetoDataHandler {
 		return monthlyWeatherDataSet;
 	}
 
-	private Map<String, String> buildUrlMap(String fileName) {
+	private Map<String, String> buildUrlMap(String filename) {
 		Map<String, String> retVal = new HashMap<>();
-		try (BufferedReader br = new BufferedReader(new FileReader(IMPORT_FILE))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
 			for (String line; (line = br.readLine()) != null;) {
 				if (util.isValidUrlProperty(line)) {
 					retVal.put(line.split(EQ)[0], line.split(EQ)[1]);
 				}
 			}
 		} catch (FileNotFoundException e) {
-			throw new IllegalStateException("File not found: " + IMPORT_FILE, e);
+			throw new IllegalStateException("File not found: " + filename, e);
 		} catch (IOException e) {
-			throw new IllegalStateException("I/O Error on: " + IMPORT_FILE, e);
+			throw new IllegalStateException("I/O Error on: " + filename, e);
 		}
 
 		return retVal;
 	}
-
-
-
-	public Map<Integer,YearlyAverageWeatherData> updateYearlyAvarageWeatherDataMap(final MonthlyWeatherData monthlyWeatherData,
-																				   final Map<Integer,YearlyAverageWeatherData> yearlyAverageWeatherDataMap) {
-		YearlyAverageWeatherData existing = yearlyAverageWeatherDataMap.get(monthlyWeatherData.getMonthStartDate().getYear());
-		if (existing == null) {
-			yearlyAverageWeatherDataMap.put(monthlyWeatherData.getMonthStartDate().getYear(), util.createYearAverageData(monthlyWeatherData));
-		} else {
-			yearlyAverageWeatherDataMap.put(existing.getYearStartDate().getYear(),util.updateYearAverageData(monthlyWeatherData, existing));
-		}
-		return yearlyAverageWeatherDataMap;
-	}
-
-
-
-
-
-
-
-
 
 }

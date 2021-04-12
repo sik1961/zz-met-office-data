@@ -15,7 +15,6 @@ public class MetoDataUtilities {
     private static final String HASH = "#";
     private static final String DOLLAR = "$";
     private static final String MT = "";
-    private static final String SPACES = " +";
     private String LOC_TIME_FORMAT = "%s %s";
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
 

@@ -5,7 +5,6 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
@@ -23,13 +22,8 @@ public class MetoExcelWriter {
     private static final DecimalFormat IDF = new DecimalFormat("##0");
     private static final String CR = "\n";
 
-    private String MONTH_DATA_FORMAT = "%1$30s %2$15s %3$15s %4$15s %5$15s %6$15s %7$15s";
-
     MetoDataUtilities utility = new MetoDataUtilities();
 
-    private FileWriter mainWriter;
-    private FileWriter locationWriter;
-    private FileWriter averageWriter;
     private String historicFileName;
     private FileOutputStream historicOut;
     private String summaryFileName;
@@ -38,8 +32,6 @@ public class MetoExcelWriter {
     private FileOutputStream extremesOut;
 
     public MetoExcelWriter() throws IOException {
-        this.mainWriter = new FileWriter("/Users/sik/met-office/zz-metoffice-full.txt");
-        this.averageWriter = new FileWriter("/Users/sik/met-office/metoffice-averages-extremes.txt");
         this.historicFileName = "/Users/sik/met-office/MetOfficeHistoricData.xlsx";
         this.historicOut = new FileOutputStream(this.historicFileName);
         this.summaryFileName = "/Users/sik/met-office/MetOfficeYearlyAverages.xlsx";
@@ -153,7 +145,6 @@ public class MetoExcelWriter {
 
     private void createAveragesWorksheet(String name, HSSFWorkbook workbook, Map<Integer, YearlyAverageWeatherData> averageData) {
 
-
         HSSFSheet sheet = workbook.createSheet(name);
 
         HSSFRow rowhead = sheet.createRow((short) 0);
@@ -164,12 +155,6 @@ public class MetoExcelWriter {
         rowhead.createCell(4).setCellValue("FrostDays");
         rowhead.createCell(5).setCellValue("RainMM");
         rowhead.createCell(6).setCellValue("SunHours");
-
-//        AtomicInteger rowCount = new AtomicInteger();
-//        averageData.entrySet().stream()
-//                .sorted()
-//                //.collect(Collectors.toCollection(LinkedHashSet::new))
-//                .forEach(r -> this.writeHistoricRow(r.getValue(),sheet, rowCount.incrementAndGet()));
 
         int rowCount = 1;
         for (Integer year: averageData.keySet()) {
