@@ -26,13 +26,29 @@
 					<configuration>
   						<archive>
     						<manifest>
-								<mainClass>com.sik.meto.MetoMain</mainClass>
+								<mainClass>com.sik.meto.data.Application</mainClass>
 								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               					<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
     						</manifest>
   						</archive>
 					</configuration>
     		</plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>jwd</classifier>
+                            <finalName>zz-met-office-data</finalName>
+                            <mainClass>com.sik.meto.data.Application</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
   <dependencies>
