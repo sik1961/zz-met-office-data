@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class MetoDataScheduler {
 
     @Scheduled(cron = "0 0/1 * * * *")
-    public void task() throws IOException {
+    public void doStuff() throws IOException {
         MetoDataHandler manager = new MetoDataHandler();
         MetoDataUtilities utilities = new MetoDataUtilities();
         MetoExcelWriter excelWriter = new MetoExcelWriter();

@@ -26,7 +26,7 @@
 					<configuration>
   						<archive>
     						<manifest>
-								<mainClass>com.sik.meto.MetoMain</mainClass>
+								<mainClass>com.sik.meto.Application</mainClass>
 								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               					<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
     						</manifest>

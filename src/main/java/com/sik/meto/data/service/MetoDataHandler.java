@@ -1,7 +1,6 @@
 
 package com.sik.meto.data.service;
 
-import com.sik.meto.data.Application;
 import com.sik.meto.data.model.MonthlyWeatherData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
