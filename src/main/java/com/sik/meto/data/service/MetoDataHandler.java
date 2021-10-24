@@ -70,6 +70,7 @@ public class MetoDataHandler {
 								.stationLocation(location)
 								.monthStartDate(util.getMonthStartDate(util.getInt(fields[I_YEAR]), util.getInt(fields[I_MNTH])))
 								.tempMaxC(util.getFloat(fields[I_TMAX]))
+								.tempMedC(util.median(util.getFloat(fields[I_TMAX]), util.getFloat(fields[I_TMIN])))
 								.tempMinC(util.getFloat(fields[I_TMIN]))
 								.afDays(util.getInt(fields[I_AFDY]))
 								.rainfallMm(util.getFloat(fields[I_RNMM]))
@@ -80,6 +81,7 @@ public class MetoDataHandler {
 								.stationLocation(location)
 								.monthStartDate(util.getMonthStartDate(util.getInt(fields[I_YEAR]), util.getInt(fields[I_MNTH])))
 								.tempMaxC(util.getFloat(fields[I_TMAX]))
+								.tempMedC(util.median(util.getFloat(fields[I_TMAX]), util.getFloat(fields[I_TMIN])))
 								.tempMinC(util.getFloat(fields[I_TMIN]))
 								.afDays(util.getInt(fields[I_AFDY]))
 								.rainfallMm(util.getFloat(fields[I_RNMM])).build();

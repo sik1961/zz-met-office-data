@@ -58,10 +58,11 @@ public class MetoExcelWriter {
             rowhead.createCell(0).setCellValue("Station");
             rowhead.createCell(1).setCellValue("Month");
             rowhead.createCell(2).setCellValue("Min.Temp");
-            rowhead.createCell(3).setCellValue("Max.Temp");
-            rowhead.createCell(4).setCellValue("FrostDays");
-            rowhead.createCell(5).setCellValue("RainMM");
-            rowhead.createCell(6).setCellValue("SunHours");
+            rowhead.createCell(3).setCellValue("Med.Temp");
+            rowhead.createCell(4).setCellValue("Max.Temp");
+            rowhead.createCell(5).setCellValue("FrostDays");
+            rowhead.createCell(6).setCellValue("RainMM");
+            rowhead.createCell(7).setCellValue("SunHours");
 
             AtomicInteger rowCount = new AtomicInteger();
             locationData.get(location).stream()
@@ -159,10 +160,11 @@ public class MetoExcelWriter {
         rowhead.createCell(0).setCellValue("Location");
         rowhead.createCell(1).setCellValue("Year");
         rowhead.createCell(2).setCellValue("Min.Temp");
-        rowhead.createCell(3).setCellValue("Max.Temp");
-        rowhead.createCell(4).setCellValue("FrostDays");
-        rowhead.createCell(5).setCellValue("RainMM");
-        rowhead.createCell(6).setCellValue("SunHours");
+        rowhead.createCell(3).setCellValue("Med.Temp");
+        rowhead.createCell(4).setCellValue("Max.Temp");
+        rowhead.createCell(5).setCellValue("FrostDays");
+        rowhead.createCell(6).setCellValue("RainMM");
+        rowhead.createCell(7).setCellValue("SunHours");
 
         int rowCount = 1;
         for (Integer year: averageData.keySet()) {
@@ -175,10 +177,11 @@ public class MetoExcelWriter {
         createCell(row,0,monthData.getStationName());
         createCell(row,1,monthData.getMonthStartDate().format(YYYY_MM));
         createCell(row,2,monthData.getTempMinC());
-        createCell(row,3,monthData.getTempMaxC());
-        createCell(row,4,monthData.getAfDays());
-        createCell(row,5,monthData.getRainfallMm());
-        createCell(row,6,monthData.getSunHours());
+        createCell(row,3,monthData.getTempMedC());
+        createCell(row,4,monthData.getTempMaxC());
+        createCell(row,5,monthData.getAfDays());
+        createCell(row,6,monthData.getRainfallMm());
+        createCell(row,7,monthData.getSunHours());
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
@@ -186,10 +189,11 @@ public class MetoExcelWriter {
         createCell(row,0,location);
         createCell(row,1,averageData.getYearStartDate().getYear());
         createCell(row,2,averageData.getAvgTempMinC());
-        createCell(row,3,averageData.getAvgTempMaxC());
-        createCell(row,4,averageData.getAvgAfDays());
-        createCell(row,5,averageData.getAvgRainfallMm());
-        createCell(row,6,averageData.getAvgSunHours());
+        createCell(row,3,averageData.getAvgTempMedC());
+        createCell(row,4,averageData.getAvgTempMaxC());
+        createCell(row,5,averageData.getAvgAfDays());
+        createCell(row,6,averageData.getAvgRainfallMm());
+        createCell(row,7,averageData.getAvgSunHours());
     }
 
     private void createCell(HSSFRow row, int column, String value) {
