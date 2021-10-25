@@ -30,6 +30,7 @@ public class MonthlyWeatherData  implements Comparable<MonthlyWeatherData> {
 	private String stationLocation;
 	private LocalDate monthStartDate;
 	private Float tempMaxC;
+	private Float tempMedC;
 	private Float tempMinC;
 	private Integer afDays;
 	private Float rainfallMm;

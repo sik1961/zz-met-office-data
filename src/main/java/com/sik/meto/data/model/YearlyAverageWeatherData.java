@@ -22,6 +22,8 @@ public class YearlyAverageWeatherData  implements Comparable<YearlyAverageWeathe
     private int countTempMaxC;
     private Float totTempMinC;
     private int countTempMinC;
+    private Float totTempMedC;
+    private int countTempMedC;
     private Float totAfDays;
     private int countAfDays;
     private Float totRainfallMm;
@@ -35,6 +37,10 @@ public class YearlyAverageWeatherData  implements Comparable<YearlyAverageWeathe
 
     public Float getAvgTempMinC() {
         return this.totTempMinC / this.countTempMinC;
+    }
+
+    public Float getAvgTempMedC() {
+        return this.totTempMedC / this.countTempMedC;
     }
 
     public Float getAvgAfDays() {

@@ -67,6 +67,8 @@ public class MetoDataUtilities {
                 .yearStartDate(getYearStartDate(monthlyWeatherData.getMonthStartDate().getYear()))
                 .countTempMaxC(monthlyWeatherData.getTempMaxC()!=null?1:0)
                 .totTempMaxC(monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0)
+                .countTempMedC(monthlyWeatherData.getTempMedC()!=null?1:0)
+                .totTempMedC(monthlyWeatherData.getTempMedC()!=null?monthlyWeatherData.getTempMedC():0)
                 .countTempMinC(monthlyWeatherData.getTempMinC()!=null?1:0)
                 .totTempMinC(monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0)
                 .countAfDays(monthlyWeatherData.getAfDays()!=null?1:0)
@@ -85,6 +87,8 @@ public class MetoDataUtilities {
                 .yearStartDate(existing.getYearStartDate())
                 .countTempMaxC(existing.getCountTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?1:0))
                 .totTempMaxC(existing.getTotTempMaxC() + (monthlyWeatherData.getTempMaxC()!=null?monthlyWeatherData.getTempMaxC():0))
+                .countTempMedC(existing.getCountTempMedC() + (monthlyWeatherData.getTempMedC()!=null?1:0))
+                .totTempMedC(existing.getTotTempMedC() + (monthlyWeatherData.getTempMedC()!=null?monthlyWeatherData.getTempMedC():0))
                 .countTempMinC(existing.getCountTempMinC() + (monthlyWeatherData.getTempMinC()!=null?1:0))
                 .totTempMinC(existing.getTotTempMinC() + (monthlyWeatherData.getTempMinC()!=null?monthlyWeatherData.getTempMinC():0))
                 .countAfDays(existing.getCountAfDays() + (monthlyWeatherData.getAfDays()!=null?1:0))
@@ -214,6 +218,14 @@ public class MetoDataUtilities {
         return s.replaceAll(AX, MT)
                 .replaceAll(HASH,MT)
                 .replaceAll(DOLLAR,MT);
+    }
+
+    public Float median(Float f1, Float f2) {
+        if (f1==null || f2==null) {
+            return null;
+        } else {
+            return (f1 + f2)/2;
+        }
     }
 
 
