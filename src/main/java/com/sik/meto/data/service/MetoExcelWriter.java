@@ -3,15 +3,16 @@ package com.sik.meto.data.service;
 import com.sik.meto.data.model.MonthlyWeatherData;
 import com.sik.meto.data.model.WeatherExtremesData;
 import com.sik.meto.data.model.YearlyAverageWeatherData;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.POIDocument;
+import org.apache.poi.hssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -25,10 +26,17 @@ import java.util.stream.Collectors;
 public class MetoExcelWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MetoExcelWriter.class);
-    private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
+    private static final DateTimeFormatter YYYY = DateTimeFormatter.ofPattern("yyyy");
+    private static final DateTimeFormatter MM = DateTimeFormatter.ofPattern("MM");
     private static final DecimalFormat FDF = new DecimalFormat("##0.0");
     private static final DecimalFormat IDF = new DecimalFormat("##0");
     private static final String CR = "\n";
+    private static final String FILE_PATH = "/Users/sik/met-office/";
+    private static final String FILE_EXT = ".xlsx";
+    private static final String HISTORIC = "MetOfficeHistoricData";
+    private static final String AVERAGES = "MetOfficeYearlyAverages";
+    private static final String EXTREMES = "MetOfficeExtremes";
+
 
     MetoDataUtilities utility = new MetoDataUtilities();
 
@@ -40,11 +48,11 @@ public class MetoExcelWriter {
     private FileOutputStream extremesOut;
 
     public MetoExcelWriter() throws IOException {
-        this.historicFileName = "/Users/sik/met-office/MetOfficeHistoricData.xlsx";
+        this.historicFileName = FILE_PATH + HISTORIC + FILE_EXT;
         this.historicOut = new FileOutputStream(this.historicFileName);
-        this.summaryFileName = "/Users/sik/met-office/MetOfficeYearlyAverages.xlsx";
+        this.summaryFileName = FILE_PATH + AVERAGES + FILE_EXT;
         this.summaryOut = new FileOutputStream(this.summaryFileName);
-        this.extremesFileName = "/Users/sik/met-office/MetOfficeExtremes.xlsx";
+        this.extremesFileName = FILE_PATH + EXTREMES + FILE_EXT;
         this.extremesOut = new FileOutputStream(this.extremesFileName);
     }
 
@@ -56,13 +64,14 @@ public class MetoExcelWriter {
 
             HSSFRow rowhead = sheet.createRow((short) 0);
             rowhead.createCell(0).setCellValue("Station");
-            rowhead.createCell(1).setCellValue("Month");
-            rowhead.createCell(2).setCellValue("Min.Temp");
-            rowhead.createCell(3).setCellValue("Med.Temp");
-            rowhead.createCell(4).setCellValue("Max.Temp");
-            rowhead.createCell(5).setCellValue("FrostDays");
-            rowhead.createCell(6).setCellValue("RainMM");
-            rowhead.createCell(7).setCellValue("SunHours");
+            rowhead.createCell(1).setCellValue("Year");
+            rowhead.createCell(2).setCellValue("Month");
+            rowhead.createCell(3).setCellValue("Min.Temp");
+            rowhead.createCell(4).setCellValue("Med.Temp");
+            rowhead.createCell(5).setCellValue("Max.Temp");
+            rowhead.createCell(6).setCellValue("FrostDays");
+            rowhead.createCell(7).setCellValue("RainMM");
+            rowhead.createCell(8).setCellValue("SunHours");
 
             AtomicInteger rowCount = new AtomicInteger();
             locationData.get(location).stream()
@@ -175,13 +184,14 @@ public class MetoExcelWriter {
     private void writeHistoricRow(MonthlyWeatherData monthData, HSSFSheet sheet, int rowNumber) {
         HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,monthData.getStationName());
-        createCell(row,1,monthData.getMonthStartDate().format(YYYY_MM));
-        createCell(row,2,monthData.getTempMinC());
-        createCell(row,3,monthData.getTempMedC());
-        createCell(row,4,monthData.getTempMaxC());
-        createCell(row,5,monthData.getAfDays());
-        createCell(row,6,monthData.getRainfallMm());
-        createCell(row,7,monthData.getSunHours());
+        createCell(row,1,monthData.getMonthStartDate().format(YYYY));
+        createCell(row,2,monthData.getMonthStartDate().format(MM));
+        createCell(row,3,monthData.getTempMinC());
+        createCell(row,4,monthData.getTempMedC());
+        createCell(row,5,monthData.getTempMaxC());
+        createCell(row,6,monthData.getAfDays());
+        createCell(row,7,monthData.getRainfallMm());
+        createCell(row,8,monthData.getSunHours());
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {

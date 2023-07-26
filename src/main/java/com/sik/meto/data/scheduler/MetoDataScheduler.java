@@ -18,15 +18,15 @@ import java.util.stream.Collectors;
 @Component
 public class MetoDataScheduler {
 
+    private Set<MonthlyWeatherData> weatherData;
+
     @Scheduled(cron = "0 0/1 * * * *")
     public void doStuff() throws IOException {
         MetoDataHandler manager = new MetoDataHandler();
         MetoDataUtilities utilities = new MetoDataUtilities();
         MetoExcelWriter excelWriter = new MetoExcelWriter();
 
-        Set<MonthlyWeatherData> weatherData = manager.getMonthlyData();
-
-        //Set<MonthlyWeatherData> locationSpecificData = utilities.filterByStation(weatherData, "Paisley");
+        this.weatherData = manager.getMonthlyData();
 
         Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
                 .sorted()

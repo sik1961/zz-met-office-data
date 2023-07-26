@@ -21,6 +21,7 @@ public class MetoDataHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(MetoDataHandler.class);
 
 	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
+	private static final String NA = "n/a";
 	private static final String EQ = "=";
 	private static final String SPACES = " +";
 
@@ -47,7 +48,7 @@ public class MetoDataHandler {
 		LOG.info("Getting: " + urlMap.get(weatherStation));
 		Set<MonthlyWeatherData> monthlyWeatherDataSet = new TreeSet<>();
 		int linesInFile=0;
-		String location = "n/a";
+		String location = NA;
 		URL page = new URL(urlMap.get(weatherStation));
 		BufferedReader br =  new BufferedReader(new InputStreamReader(page.openStream()));
 		try {
