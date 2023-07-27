@@ -3,16 +3,14 @@ package com.sik.meto.data.service;
 import com.sik.meto.data.model.MonthlyWeatherData;
 import com.sik.meto.data.model.WeatherExtremesData;
 import com.sik.meto.data.model.YearlyAverageWeatherData;
-import org.apache.poi.POIDocument;
 import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -33,9 +31,29 @@ public class MetoExcelWriter {
     private static final String CR = "\n";
     private static final String FILE_PATH = "/Users/sik/met-office/";
     private static final String FILE_EXT = ".xlsx";
-    private static final String HISTORIC = "MetOfficeHistoricData";
-    private static final String AVERAGES = "MetOfficeYearlyAverages";
-    private static final String EXTREMES = "MetOfficeExtremes";
+    private static final String MO_HISTORIC = "MetOfficeHistoricData";
+    private static final String MO_AVERAGES = "MetOfficeYearlyAverages";
+    private static final String MO_EXTREMES = "MetOfficeExtremes";
+    private static final String T_STATION = "Station";
+    private static final String T_YEAR = "Year";
+    private static final String T_MONTH = "Month";
+    private static final String T_MINTEMP = "Min.Temp";
+    private static final String T_MEDTEMP = "Med.Temp";
+    private static final String T_MAXTEMP = "Max.Temp";
+    private static final String T_FROSTDAYS = "FrostDays";
+    private static final String T_RAINMM = "RainMM";
+    private static final String T_SUNHOURS = "SunHours";
+    private static final String T_ALL = "All";
+    private static final String T_MAXRAINFALLMM = "Max.RainfallMM";
+    private static final String T_AFDAYS = "Max.AFDays";
+    private static final String T_EXTREMES = "Extremes";
+    private static final String T_NAME = "Extreme";
+    private static final String T_EXTREME = "Extreme";
+    private static final String T_LOCTIME = "Loc/Time";
+    private static final String T_VALUE = "Value";
+
+    private static final String MSG_SUCCESS = " Excel file has been generated successfully.";
+
 
 
     MetoDataUtilities utility = new MetoDataUtilities();
@@ -48,11 +66,11 @@ public class MetoExcelWriter {
     private FileOutputStream extremesOut;
 
     public MetoExcelWriter() throws IOException {
-        this.historicFileName = FILE_PATH + HISTORIC + FILE_EXT;
+        this.historicFileName = FILE_PATH + MO_HISTORIC + FILE_EXT;
         this.historicOut = new FileOutputStream(this.historicFileName);
-        this.summaryFileName = FILE_PATH + AVERAGES + FILE_EXT;
+        this.summaryFileName = FILE_PATH + MO_AVERAGES + FILE_EXT;
         this.summaryOut = new FileOutputStream(this.summaryFileName);
-        this.extremesFileName = FILE_PATH + EXTREMES + FILE_EXT;
+        this.extremesFileName = FILE_PATH + MO_EXTREMES + FILE_EXT;
         this.extremesOut = new FileOutputStream(this.extremesFileName);
     }
 
@@ -63,15 +81,15 @@ public class MetoExcelWriter {
             HSSFSheet sheet = workbook.createSheet(location);
 
             HSSFRow rowhead = sheet.createRow((short) 0);
-            rowhead.createCell(0).setCellValue("Station");
-            rowhead.createCell(1).setCellValue("Year");
-            rowhead.createCell(2).setCellValue("Month");
-            rowhead.createCell(3).setCellValue("Min.Temp");
-            rowhead.createCell(4).setCellValue("Med.Temp");
-            rowhead.createCell(5).setCellValue("Max.Temp");
-            rowhead.createCell(6).setCellValue("FrostDays");
-            rowhead.createCell(7).setCellValue("RainMM");
-            rowhead.createCell(8).setCellValue("SunHours");
+            rowhead.createCell(0).setCellValue(T_STATION);
+            rowhead.createCell(1).setCellValue(T_YEAR);
+            rowhead.createCell(2).setCellValue(T_MONTH);
+            rowhead.createCell(3).setCellValue(T_MINTEMP);
+            rowhead.createCell(4).setCellValue(T_MEDTEMP);
+            rowhead.createCell(5).setCellValue(T_MAXTEMP);
+            rowhead.createCell(6).setCellValue(T_FROSTDAYS);
+            rowhead.createCell(7).setCellValue(T_RAINMM);
+            rowhead.createCell(8).setCellValue(T_SUNHOURS);
 
             AtomicInteger rowCount = new AtomicInteger();
             locationData.get(location).stream()
@@ -83,7 +101,7 @@ public class MetoExcelWriter {
         workbook.write(historicOut);
         historicOut.close();
         workbook.close();
-        LOG.info(historicFileName + " Excel file has been generated successfully.");
+        LOG.info(historicFileName + MSG_SUCCESS);
     }
 
     public void writeAveragesWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -92,7 +110,7 @@ public class MetoExcelWriter {
 
         HSSFWorkbook workbook = new HSSFWorkbook();
 
-        this.createAveragesWorksheet("All", workbook, utility.buildYearlyAvarageWeatherDataMap(everything));
+        this.createAveragesWorksheet(T_ALL, workbook, utility.buildYearlyAvarageWeatherDataMap(everything));
 
         for (String location: locationData.keySet()) {
             this.createAveragesWorksheet(location, workbook, utility.buildYearlyAvarageWeatherDataMap(locationData.get(location)));
@@ -101,19 +119,19 @@ public class MetoExcelWriter {
         workbook.write(summaryOut);
         summaryOut.close();
         workbook.close();
-        LOG.info(summaryFileName + " Excel file has been generated successfully.");
+        LOG.info(summaryFileName + MSG_SUCCESS);
     }
 
     public void writeExtremesWorkbook(Map<String, WeatherExtremesData> extremesData) throws IOException {
         HSSFWorkbook workbook = new HSSFWorkbook();
 
-        HSSFSheet sheet = workbook.createSheet("Extremes");
+        HSSFSheet sheet = workbook.createSheet(T_EXTREMES);
 
         HSSFRow rowhead = sheet.createRow((short) 0);
-        rowhead.createCell(0).setCellValue("Name");
-        rowhead.createCell(1).setCellValue("Loc/Time");
-        rowhead.createCell(2).setCellValue("Extreme");
-        rowhead.createCell(3).setCellValue("Value");
+        rowhead.createCell(0).setCellValue(T_NAME);
+        rowhead.createCell(1).setCellValue(T_LOCTIME);
+        rowhead.createCell(2).setCellValue(T_EXTREME);
+        rowhead.createCell(3).setCellValue(T_VALUE);
 
         int rowNumber = 1;
         for(String location: extremesData.keySet()) {
@@ -123,38 +141,38 @@ public class MetoExcelWriter {
         workbook.write(extremesOut);
         extremesOut.close();
         workbook.close();
-        LOG.info(extremesFileName + " Excel file has been generated successfully.");
+        LOG.info(extremesFileName + MSG_SUCCESS);
     }
 
     private int writeExtremesRows(HSSFSheet sheet, String location, WeatherExtremesData weatherExtremesData, int row) {
         HSSFRow minTemp = sheet.createRow((short) row);
         createCell(minTemp,0,location);
         createCell(minTemp,1,weatherExtremesData.getMinTempLocTime());
-        createCell(minTemp,2,"Min.Temp");
+        createCell(minTemp,2, T_MINTEMP);
         createCell(minTemp,3,weatherExtremesData.getMinTemp());
         row++;
         HSSFRow maxTemp = sheet.createRow((short) row);
         createCell(maxTemp,0,location);
         createCell(maxTemp,1,weatherExtremesData.getMaxTempLocTime());
-        createCell(maxTemp,2,"Max.Temp");
+        createCell(maxTemp,2, T_MAXTEMP);
         createCell(maxTemp,3,weatherExtremesData.getMaxTemp());
         row++;
         HSSFRow maxRain = sheet.createRow((short) row);
         createCell(maxRain,0,location);
         createCell(maxRain,1,weatherExtremesData.getMaxRainfallMmLocTime());
-        createCell(maxRain,2,"Max.RainfallMM");
+        createCell(maxRain,2, T_MAXRAINFALLMM);
         createCell(maxRain,3,weatherExtremesData.getMaxRainfallMm());
         row++;
         HSSFRow maxAFD = sheet.createRow((short) row);
         createCell(maxAFD,0,location);
         createCell(maxAFD,1,weatherExtremesData.getMaxAfDaysLocTime());
-        createCell(maxAFD,2,"Max.AFDays");
+        createCell(maxAFD,2, T_AFDAYS);
         createCell(maxAFD,3,weatherExtremesData.getMaxAfDays());
         row++;
         HSSFRow maxSun = sheet.createRow((short) row);
         createCell(maxSun,0,location);
         createCell(maxSun,1,weatherExtremesData.getMaxSunHoursLocTime());
-        createCell(maxSun,2,"Max.SunHours");
+        createCell(maxSun,2, T_SUNHOURS);
         createCell(maxSun,3,weatherExtremesData.getMaxSunHours());
         row++;
         row++;
@@ -166,14 +184,14 @@ public class MetoExcelWriter {
         HSSFSheet sheet = workbook.createSheet(name);
 
         HSSFRow rowhead = sheet.createRow((short) 0);
-        rowhead.createCell(0).setCellValue("Location");
-        rowhead.createCell(1).setCellValue("Year");
-        rowhead.createCell(2).setCellValue("Min.Temp");
-        rowhead.createCell(3).setCellValue("Med.Temp");
-        rowhead.createCell(4).setCellValue("Max.Temp");
-        rowhead.createCell(5).setCellValue("FrostDays");
-        rowhead.createCell(6).setCellValue("RainMM");
-        rowhead.createCell(7).setCellValue("SunHours");
+        rowhead.createCell(0).setCellValue(T_STATION);
+        rowhead.createCell(1).setCellValue(T_YEAR);
+        rowhead.createCell(2).setCellValue(T_MINTEMP);
+        rowhead.createCell(3).setCellValue(T_MEDTEMP);
+        rowhead.createCell(4).setCellValue(T_MAXTEMP);
+        rowhead.createCell(5).setCellValue(T_FROSTDAYS);
+        rowhead.createCell(6).setCellValue(T_RAINMM);
+        rowhead.createCell(7).setCellValue(T_SUNHOURS);
 
         int rowCount = 1;
         for (Integer year: averageData.keySet()) {
