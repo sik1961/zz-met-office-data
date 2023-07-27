@@ -24,6 +24,7 @@ public class MetoDataUtilities {
     private static final String HASH = "#";
     private static final String DOLLAR = "$";
     private static final String MT = "";
+    private static final String T_ALL = "*All*";
     private String LOC_TIME_FORMAT = "%s %s";
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy/MM");
 
@@ -102,7 +103,7 @@ public class MetoDataUtilities {
 
     public Map<String, WeatherExtremesData> buildExtremesMap(Set<MonthlyWeatherData> weatherData) {
         Map<String, WeatherExtremesData> extremes = new TreeMap<>();
-        extremes.put("*All*", this.getExtremes(weatherData));
+        extremes.put(T_ALL, this.getExtremes(weatherData));
 
         Map<String,Set<MonthlyWeatherData>> dataByLocation = weatherData.stream()
                 .sorted()

@@ -24,6 +24,12 @@ public class MetoDataHandler {
 	private static final String NA = "n/a";
 	private static final String EQ = "=";
 	private static final String SPACES = " +";
+	private static final String M_GETTING = "Getting: ";
+	private static final String M_WARN = "Warn: ";
+	private static final String M_FIELDS = " #fields=";
+	private static final String M_LINES = " #lines=";
+	private static final String M_RECORDS = " #records=";
+
 
 	MetoDataUtilities util = new MetoDataUtilities();
 
@@ -38,14 +44,14 @@ public class MetoDataHandler {
 			monthlyData.addAll(readMonthlyDataFromUrl(weatherStation));
 		}
 
-		LOG.info("records=" + monthlyData.size());
+		LOG.info(M_RECORDS + monthlyData.size());
 
 		return monthlyData;
 
 	}
 
 	private Set<MonthlyWeatherData> readMonthlyDataFromUrl(String weatherStation) throws IOException {
-		LOG.info("Getting: " + urlMap.get(weatherStation));
+		LOG.info(M_GETTING + urlMap.get(weatherStation));
 		Set<MonthlyWeatherData> monthlyWeatherDataSet = new TreeSet<>();
 		int linesInFile=0;
 		String location = NA;
@@ -87,7 +93,7 @@ public class MetoDataHandler {
 								.afDays(util.getInt(fields[I_AFDY]))
 								.rainfallMm(util.getFloat(fields[I_RNMM])).build();
 					} else {
-						LOG.info("Warn: " + inputLine + " #fields=" + fields.length);
+						LOG.info(M_WARN + inputLine + M_FIELDS + fields.length);
 					}
 				}
 				if (monthData != null) {
@@ -98,7 +104,7 @@ public class MetoDataHandler {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		LOG.info("lines=" + linesInFile + " records=" + monthlyWeatherDataSet.size());
+		LOG.info(M_LINES + linesInFile + M_RECORDS + monthlyWeatherDataSet.size());
 		br.close();
 		return monthlyWeatherDataSet;
 	}
