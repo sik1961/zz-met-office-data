@@ -5,6 +5,7 @@ import com.sik.meto.data.model.WeatherExtremesData;
 import com.sik.meto.data.model.YearlyAverageWeatherData;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.formula.functions.T;
+import org.apache.poi.ss.usermodel.CellType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -213,6 +214,7 @@ public class MetoExcelWriter {
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
+        System.out.println(">>>>>>>>>>" + averageData);
         HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,location);
         createCell(row,1,averageData.getYearStartDate().getYear());
@@ -226,14 +228,16 @@ public class MetoExcelWriter {
 
     private void createCell(HSSFRow row, int column, String value) {
         if (value!=null) {
-            row.createCell(column).setCellValue(value);
+            row.createCell(column).setCellType(CellType.STRING);
+            row.getCell(column).setCellValue(value);
         } else {
             row.createCell(column).setBlank();
         }
     }
     private void createCell(HSSFRow row, int column, Float value) {
         if (value!=null && !value.isNaN()) {
-            row.createCell(column).setCellValue(FDF.format(value));
+            row.createCell(column).setCellType(CellType.NUMERIC);
+            row.getCell(column).setCellValue(Float.parseFloat(FDF.format(value)));
         } else {
             row.createCell(column).setBlank();
         }
@@ -241,7 +245,8 @@ public class MetoExcelWriter {
 
     private void createCell(HSSFRow row, int column, Integer value) {
         if (value!=null) {
-            row.createCell(column).setCellValue(IDF.format(value));
+            row.createCell(column).setCellType(CellType.NUMERIC);
+            row.getCell(column).setCellValue(Integer.parseInt(IDF.format(value)));
         } else {
             row.createCell(column).setBlank();
         }
