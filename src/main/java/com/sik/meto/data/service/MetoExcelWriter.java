@@ -35,7 +35,6 @@ public class MetoExcelWriter {
     private static final String CR = "\n";
     private static final String FILE_PATH = "/Users/sik/met-office/";
     private static final String XLSX_EXT = ".xlsx";
-    private static final String CSV_EXT = ".csv";
     private static final String ZIP_EXT = ".zip";
     private static final String MO_HISTORIC = "MetOfficeHistoricData";
     private static final String MO_AVERAGES = "MetOfficeYearlyAverages";
@@ -256,6 +255,7 @@ public class MetoExcelWriter {
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
+        System.out.println(">>>>>>>>>>" + averageData);
         HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,location);
         createCell(row,1,averageData.getYearStartDate().getYear());
