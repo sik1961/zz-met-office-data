@@ -1,5 +1,9 @@
 package com.sik.meto.data.service;
 
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import com.sik.meto.data.model.MonthlyWeatherData;
 import com.sik.meto.data.model.WeatherExtremesData;
 import com.sik.meto.data.model.YearlyAverageWeatherData;
@@ -8,16 +12,18 @@ import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.CellType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -55,6 +61,10 @@ public class MetoExcelWriter {
 
     private static final String MSG_SUCCESS = " Excel file has been generated successfully.";
 
+    public String ftpUser;
+    public String ftpSecret;
+    public String ftpUrl;
+
 
 
     MetoDataUtilities utility = new MetoDataUtilities();
@@ -65,6 +75,11 @@ public class MetoExcelWriter {
     private FileOutputStream summaryOut;
     private String extremesFileName;
     private FileOutputStream extremesOut;
+    private Properties ftpProps;
+
+
+
+    private ChannelSftp channelSftp;
 
     public MetoExcelWriter() throws IOException {
         this.historicFileName = FILE_PATH + MO_HISTORIC + FILE_EXT;
@@ -73,6 +88,11 @@ public class MetoExcelWriter {
         this.summaryOut = new FileOutputStream(this.summaryFileName);
         this.extremesFileName = FILE_PATH + MO_EXTREMES + FILE_EXT;
         this.extremesOut = new FileOutputStream(this.extremesFileName);
+        this.ftpProps = getFtpProps();
+        this.ftpUser = this.ftpProps.get("neunelfer.ftp.username").toString();
+        this.ftpSecret = this.ftpProps.get("neunelfer.ftp.secret").toString();
+        this.ftpUrl = this.ftpProps.get("neunelfer.ftp.url").toString();
+        this.channelSftp = setupJsch();
     }
 
     public void writeHistoricWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -102,6 +122,8 @@ public class MetoExcelWriter {
         workbook.write(historicOut);
         historicOut.close();
         workbook.close();
+
+
         LOG.info(historicFileName + MSG_SUCCESS);
     }
 
@@ -249,6 +271,31 @@ public class MetoExcelWriter {
             row.getCell(column).setCellValue(Integer.parseInt(IDF.format(value)));
         } else {
             row.createCell(column).setBlank();
+        }
+    }
+
+    private Properties getFtpProps() {
+        try (
+            InputStream propsFile = new FileInputStream(FILE_PATH + "ftp/ftp.properties")) {
+            Properties ftpProps = new Properties();
+            ftpProps.load(propsFile);
+            return ftpProps;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private ChannelSftp setupJsch() {
+        LOG.info("Starting SFTP Channel - host: {} - user: {}", ftpUrl,ftpUser);
+        try {
+            JSch jsch = new JSch();
+            jsch.setKnownHosts("/Users/sik/.ssh/known_hosts");
+            Session jschSession = jsch.getSession(ftpUser, ftpUrl, 21);
+            jschSession.setPassword(ftpSecret);
+            jschSession.connect();
+            return (ChannelSftp) jschSession.openChannel("sftp");
+        } catch (JSchException e) {
+            throw new RuntimeException(e);
         }
     }
 
