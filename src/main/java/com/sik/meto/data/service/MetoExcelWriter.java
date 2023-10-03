@@ -255,7 +255,6 @@ public class MetoExcelWriter {
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
-        System.out.println(">>>>>>>>>>" + averageData);
         HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,location);
         createCell(row,1,averageData.getYearStartDate().getYear());
