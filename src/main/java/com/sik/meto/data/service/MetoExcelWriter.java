@@ -8,24 +8,20 @@ import com.sik.meto.data.model.MonthlyWeatherData;
 import com.sik.meto.data.model.WeatherExtremesData;
 import com.sik.meto.data.model.YearlyAverageWeatherData;
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.CellType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Component
 public class MetoExcelWriter {
@@ -37,7 +33,8 @@ public class MetoExcelWriter {
     private static final DecimalFormat IDF = new DecimalFormat("##0");
     private static final String CR = "\n";
     private static final String FILE_PATH = "/Users/sik/met-office/";
-    private static final String FILE_EXT = ".xlsx";
+    private static final String XLSX_EXT = ".xlsx";
+    private static final String ZIP_EXT = ".zip";
     private static final String MO_HISTORIC = "MetOfficeHistoricData";
     private static final String MO_AVERAGES = "MetOfficeYearlyAverages";
     private static final String MO_EXTREMES = "MetOfficeExtremes";
@@ -59,7 +56,7 @@ public class MetoExcelWriter {
     private static final String T_LOCTIME = "Loc/Time";
     private static final String T_VALUE = "Value";
 
-    private static final String MSG_SUCCESS = " Excel file has been generated successfully.";
+    private static final String MSG_SUCCESS = " file has been generated successfully.";
 
     public String ftpUser;
     public String ftpSecret;
@@ -69,33 +66,30 @@ public class MetoExcelWriter {
 
     MetoDataUtilities utility = new MetoDataUtilities();
 
-    private String historicFileName;
-    private FileOutputStream historicOut;
-    private String summaryFileName;
-    private FileOutputStream summaryOut;
-    private String extremesFileName;
-    private FileOutputStream extremesOut;
-    private Properties ftpProps;
-
-
-
-    private ChannelSftp channelSftp;
+    private String historicXlsFileName;
+    private String historicZipFileName;
+    private FileOutputStream historicXlsOut;
+    private String summaryXlsFileName;
+    private String summaryZipFileName;
+    private FileOutputStream summaryXlsOut;
+    private String extremesXlsFileName;
+    private String extremesZipFileName;
+    private FileOutputStream extremesXlsOut;
 
     public MetoExcelWriter() throws IOException {
-        this.historicFileName = FILE_PATH + MO_HISTORIC + FILE_EXT;
-        this.historicOut = new FileOutputStream(this.historicFileName);
-        this.summaryFileName = FILE_PATH + MO_AVERAGES + FILE_EXT;
-        this.summaryOut = new FileOutputStream(this.summaryFileName);
-        this.extremesFileName = FILE_PATH + MO_EXTREMES + FILE_EXT;
-        this.extremesOut = new FileOutputStream(this.extremesFileName);
-        this.ftpProps = getFtpProps();
-        this.ftpUser = this.ftpProps.get("neunelfer.ftp.username").toString();
-        this.ftpSecret = this.ftpProps.get("neunelfer.ftp.secret").toString();
-        this.ftpUrl = this.ftpProps.get("neunelfer.ftp.url").toString();
-        this.channelSftp = setupJsch();
+        this.historicXlsFileName = FILE_PATH + MO_HISTORIC + XLSX_EXT;
+        this.historicZipFileName = FILE_PATH + MO_HISTORIC + ZIP_EXT;
+        this.historicXlsOut = new FileOutputStream(this.historicXlsFileName);
+        this.summaryXlsFileName = FILE_PATH + MO_AVERAGES + XLSX_EXT;
+        this.summaryZipFileName = FILE_PATH + MO_AVERAGES + ZIP_EXT;
+        this.summaryXlsOut = new FileOutputStream(this.summaryXlsFileName);
+        this.extremesXlsFileName = FILE_PATH + MO_EXTREMES + XLSX_EXT;
+        this.extremesZipFileName = FILE_PATH + MO_EXTREMES + ZIP_EXT;
+        this.extremesXlsOut = new FileOutputStream(this.extremesXlsFileName);
     }
 
     public void writeHistoricWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
+
         HSSFWorkbook workbook = new HSSFWorkbook();
 
         for(String location: locationData.keySet()) {
@@ -119,12 +113,20 @@ public class MetoExcelWriter {
                     .forEach(r -> this.writeHistoricRow(r,sheet, rowCount.incrementAndGet()));
         }
 
-        workbook.write(historicOut);
-        historicOut.close();
+        workbook.write(historicXlsOut);
+        historicXlsOut.close();
         workbook.close();
 
+        LOG.info(historicXlsFileName + MSG_SUCCESS);
 
-        LOG.info(historicFileName + MSG_SUCCESS);
+        try (
+            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(historicZipFileName))) {
+            File fileToZip = new File(historicXlsFileName);
+            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
+            Files.copy(fileToZip.toPath(), zipOut);
+        }
+
+        LOG.info(historicZipFileName + MSG_SUCCESS);
     }
 
     public void writeAveragesWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -139,10 +141,20 @@ public class MetoExcelWriter {
             this.createAveragesWorksheet(location, workbook, utility.buildYearlyAvarageWeatherDataMap(locationData.get(location)));
         }
 
-        workbook.write(summaryOut);
-        summaryOut.close();
+        workbook.write(summaryXlsOut);
+        summaryXlsOut.close();
         workbook.close();
-        LOG.info(summaryFileName + MSG_SUCCESS);
+
+        LOG.info(summaryXlsFileName + MSG_SUCCESS);
+
+        try (
+            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(summaryZipFileName))) {
+            File fileToZip = new File(summaryXlsFileName);
+            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
+            Files.copy(fileToZip.toPath(), zipOut);
+        }
+
+        LOG.info(summaryZipFileName + MSG_SUCCESS);
     }
 
     public void writeExtremesWorkbook(Map<String, WeatherExtremesData> extremesData) throws IOException {
@@ -161,10 +173,20 @@ public class MetoExcelWriter {
             rowNumber = this.writeExtremesRows(sheet,location, extremesData.get(location),rowNumber);
         }
 
-        workbook.write(extremesOut);
-        extremesOut.close();
+        workbook.write(extremesXlsOut);
+        extremesXlsOut.close();
         workbook.close();
-        LOG.info(extremesFileName + MSG_SUCCESS);
+
+        LOG.info(extremesXlsFileName + MSG_SUCCESS);
+
+        try (
+            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(extremesZipFileName))) {
+            File fileToZip = new File(extremesXlsFileName);
+            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
+            Files.copy(fileToZip.toPath(), zipOut);
+        }
+
+        LOG.info(extremesZipFileName + MSG_SUCCESS);
     }
 
     private int writeExtremesRows(HSSFSheet sheet, String location, WeatherExtremesData weatherExtremesData, int row) {
@@ -236,7 +258,6 @@ public class MetoExcelWriter {
     }
 
     private void writeAveragesRow(YearlyAverageWeatherData averageData, HSSFSheet sheet, int rowNumber, String location) {
-        System.out.println(">>>>>>>>>>" + averageData);
         HSSFRow row = sheet.createRow((short) rowNumber);
         createCell(row,0,location);
         createCell(row,1,averageData.getYearStartDate().getYear());
