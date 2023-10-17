@@ -52,21 +52,14 @@ public class MetoExcelWriter {
     private static final String T_EXTREME = "Extreme";
     private static final String T_LOCTIME = "Loc/Time";
     private static final String T_VALUE = "Value";
-    private static final String SUCCESS = "Success!";
-    private static final String FAILED = "Failed!";
+    private static final String SUCCESS = " Success!";
+    private static final String FAILED = " Failed!";
 
     private static final String WRI_SUCCESS = " file has been generated successfully.";
     private static final String FTP_SUCCESS = " file has been transferred successfully.";
 
-    private String ftpUser;
-    private String ftpSecret;
-    private String ftpUrl;
-    private int ftpPort;
-
-
-
-
     MetoDataUtilities utility = new MetoDataUtilities();
+    FTPSUploader ftpsUploader = new FTPSUploader();
 
     private String historicXlsFileName;
     private String historicZipFileName;
@@ -78,10 +71,6 @@ public class MetoExcelWriter {
     private String extremesZipFileName;
     private FileOutputStream extremesXlsOut;
 
-    private Properties ftpProps;
-    private String ftpRemoteDir;
-    private String ftpLocalDir;
-
     public MetoExcelWriter() throws IOException {
         this.historicXlsFileName = FILE_PATH + MO_HISTORIC + XLSX_EXT;
         this.historicZipFileName = FILE_PATH + MO_HISTORIC + ZIP_EXT;
@@ -92,13 +81,6 @@ public class MetoExcelWriter {
         this.extremesXlsFileName = FILE_PATH + MO_EXTREMES + XLSX_EXT;
         this.extremesZipFileName = FILE_PATH + MO_EXTREMES + ZIP_EXT;
         this.extremesXlsOut = new FileOutputStream(this.extremesXlsFileName);
-        this.ftpProps = this.getFtpProps();
-        this.ftpUser = ftpProps.get("neunelfer.ftp.username").toString();
-        this.ftpSecret = ftpProps.get("neunelfer.ftp.secret").toString();
-        this.ftpUrl = ftpProps.get("neunelfer.ftp.url").toString();
-        this.ftpPort = Integer.parseInt(ftpProps.get("neunelfer.ftp.port").toString());
-        this.ftpLocalDir = ftpProps.get("neunelfer.ftp.localdir").toString();
-        this.ftpRemoteDir = ftpProps.get("neunelfer.ftp.remotedir").toString();
     }
 
     public void writeHistoricWorkbook(Map<String, Set<MonthlyWeatherData>> locationData) throws IOException {
@@ -132,60 +114,11 @@ public class MetoExcelWriter {
 
         LOG.info(historicXlsFileName + WRI_SUCCESS);
 
-        try (
-            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(historicZipFileName))) {
-            File fileToZip = new File(historicXlsFileName);
-            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
-            Files.copy(fileToZip.toPath(), zipOut);
-        }
-
-        LOG.info(historicZipFileName + WRI_SUCCESS);
-
-        Session session = null;
-        Channel channel = null;
-        ChannelSftp c = getFtpChannel();
-
-        //Now connect and SFTP to the SFTP Server
-        try {
-            //Change to the remote directory
-            LOG.info("***   Changing to FTP remote dir: " + ftpRemoteDir + "   ***");
-            c.cd(ftpRemoteDir);
-
-            //Send the file we generated
-            try {
-                LOG.info("***   Storing file as remote filename: " + historicZipFileName + "   ***");
-
-                FileInputStream fisZip = new FileInputStream(ftpLocalDir + historicZipFileName);
-                c.put(fisZip, historicZipFileName);
-            } catch (SftpException e) {
-                LOG.info("***   Storing remote file failed. " + e.toString() + "   ***");
-                throw e;
-            }
-        } catch (SftpException e) {
-            LOG.info("***   Unable to connect to FTP server. " + e.toString() + "   ***");
-            try {
-                throw e;
-            } catch (SftpException ex) {
-                throw new RuntimeException(ex);
-            }
-        } finally {
-            //
-            //Disconnect from the FTP server
-            //
-            try {
-                if(session != null)
-                    session.disconnect();
-
-                if(channel != null)
-                    channel.disconnect();
-
-                if(c != null)
-                    c.quit();
-            } catch (Exception exc) {
-                LOG.error("***   Unable to disconnect from FTP server. " + exc.toString()+"   ***");
-            }
-
-            LOG.info("***   SFTP Process Complete.   ***");
+        boolean success = ftpsUploader.upload(historicZipFileName);
+        if (success) {
+            LOG.info(historicZipFileName + FTP_SUCCESS);
+        } else {
+            LOG.warn(historicZipFileName + " upload " + FAILED);
         }
     }
 
@@ -207,14 +140,6 @@ public class MetoExcelWriter {
 
         LOG.info(summaryXlsFileName + WRI_SUCCESS);
 
-        try (
-            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(summaryZipFileName))) {
-            File fileToZip = new File(summaryXlsFileName);
-            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
-            Files.copy(fileToZip.toPath(), zipOut);
-        }
-
-        LOG.info(summaryZipFileName + WRI_SUCCESS);
     }
 
     public void writeExtremesWorkbook(Map<String, WeatherExtremesData> extremesData) throws IOException {
@@ -239,14 +164,6 @@ public class MetoExcelWriter {
 
         LOG.info(extremesXlsFileName + WRI_SUCCESS);
 
-        try (
-            ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(extremesZipFileName))) {
-            File fileToZip = new File(extremesXlsFileName);
-            zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
-            Files.copy(fileToZip.toPath(), zipOut);
-        }
-
-        LOG.info(extremesZipFileName + WRI_SUCCESS);
     }
 
     private int writeExtremesRows(HSSFSheet sheet, String location, WeatherExtremesData weatherExtremesData, int row) {
@@ -353,79 +270,6 @@ public class MetoExcelWriter {
         } else {
             row.createCell(column).setBlank();
         }
-    }
-
-    private Properties getFtpProps() {
-        try (
-            InputStream propsFile = new FileInputStream(FILE_PATH + "ftp/ftp.properties")) {
-            Properties ftpProps = new Properties();
-            ftpProps.load(propsFile);
-            return ftpProps;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private ChannelSftp getFtpChannel() {
-        LOG.info("Initialising SFTP Channel - host: {} - user: {}", ftpUrl, ftpUser);
-
-        int ftpPort = 21;
-
-        LOG.info("***   Creating FTP session.   ***");
-        JSch jsch = new JSch();
-        Session session = null;
-        Channel channel = null;
-        ChannelSftp c = null;
-
-        //Now connect and SFTP to the SFTP Server
-        try {
-            //Create a session sending through our username and password
-            session = jsch.getSession(ftpUser, ftpUrl, ftpPort);
-            LOG.info("***   FTP Session created.   ***");
-            session.setPassword(ftpSecret);
-
-            //Security.addProvider(new com.sun.crypto.provider.SunJCE());
-            //Setup Strict HostKeyChecking to no so we dont get the
-            //unknown host key exception
-            Properties config = new Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
-            session.connect();
-            LOG.info("***   Session connected.   ***");
-
-            //Open the SFTP channel
-            LOG.info("***   Opening FTP Channel.   ***");
-            channel = session.openChannel("sftp");
-            channel.connect();
-            return (ChannelSftp) channel;
-
-        } catch (Exception e) {
-            LOG.info("***   Unable to connect to FTP server. " + e.getMessage() + "   ***");
-            try {
-                throw e;
-            } catch (JSchException ex) {
-                throw new RuntimeException(ex);
-            }
-        } finally {
-            //
-            //Disconnect from the FTP server
-            //
-            try {
-                if(session != null)
-                    session.disconnect();
-
-                if(channel != null)
-                    channel.disconnect();
-
-                if(c != null)
-                    c.quit();
-            } catch (Exception exc) {
-                LOG.error("***   Unable to disconnect from FTP server. " + exc.getMessage() + "   ***");
-            }
-
-            LOG.info("***   SFTP Process Complete.   ***");
-        }
-
     }
 
 }

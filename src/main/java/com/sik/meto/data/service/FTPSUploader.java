@@ -14,10 +14,10 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
-public class SecureUpload {
+public class FTPSUploader {
 
     private static final String FILE_PATH = "/Users/sik/met-office/";
-    private static final Logger LOG = LoggerFactory.getLogger(SecureUpload.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FTPSUploader.class);
     private Properties ftpProps;
     private String ftpUrl;
     private String ftpUser;
@@ -26,7 +26,9 @@ public class SecureUpload {
     private String ftpLocalDir;
     private String ftpRemoteDir;
 
-    public SecureUpload() {
+    private FTPSClient ftpsClient;
+
+    public FTPSUploader() {
         this.ftpProps = this.getFtpProps();
         this.ftpUser = ftpProps.get("neunelfer.ftp.username").toString();
         this.ftpSecret = ftpProps.get("neunelfer.ftp.secret").toString();
@@ -34,66 +36,67 @@ public class SecureUpload {
         this.ftpPort = Integer.parseInt(ftpProps.get("neunelfer.ftp.port").toString());
         this.ftpLocalDir = ftpProps.get("neunelfer.ftp.localdir").toString();
         this.ftpRemoteDir = ftpProps.get("neunelfer.ftp.remotedir").toString();
+        this.ftpsClient = this.initialiseClient();
     }
-    // perform multiple file upload
+
     public boolean upload(String fileName)
     {
-        String server = ftpUrl;
-        int port = 2121;
-        String user = "joao";
-        String pass = "1234";
-
-        boolean error = false;
-        FTPSClient ftp = null;
         try
         {
-            ftp = new FTPSClient("SSL");
-            ftp.setAuthValue("SSL");
-            ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
-
             int reply;
 
-            ftp.connect(ftpUrl, ftpPort);
+            ftpsClient.connect(ftpUrl, ftpPort);
             LOG.info("Connected to: {}", ftpUrl);
-            LOG.info(ftp.getReplyString());
+            LOG.info(ftpsClient.getReplyString());
 
             // After connection attempt, you should check the reply code to verify
             // success.
-            reply = ftp.getReplyCode();
+            reply = ftpsClient.getReplyCode();
 
             if (!FTPReply.isPositiveCompletion(reply))
             {
-                ftp.disconnect();
-                System.err.println("FTP server refused connection.");
-                System.exit(1);
+                ftpsClient.disconnect();
+                LOG.error("FTP server refused connection.");
+                return false;
             }
-            ftp.login(ftpUser, ftpSecret);
+            ftpsClient.login(ftpUser, ftpSecret);
             // ... // transfer files
-            ftp.setBufferSize(1000);
-            ftp.enterLocalPassiveMode();
+            ftpsClient.setBufferSize(1000);
+            ftpsClient.enterLocalPassiveMode();
             // ftp.setControlEncoding("GB2312");
-            ftp.changeWorkingDirectory("/");
-            ftp.changeWorkingDirectory("/ae"); //path where my files are
-            ftp.setFileType(FTP.BINARY_FILE_TYPE);
-            System.out.println("Remote system is " + ftp.getSystemName());
+            ftpsClient.changeWorkingDirectory(ftpRemoteDir);
+            // ftpsClient.changeWorkingDirectory("/ae"); //path where my files are
+            ftpsClient.setFileType(FTP.ASCII_FILE_TYPE);
+            LOG.info("Remote system is " + ftpsClient.getSystemName());
 
-            String[] tmp = ftp.listNames();  //returns null
-            System.out.println(tmp.length);
+            ftpsClient.remoteStore(ftpLocalDir + fileName);
+            reply = ftpsClient.getReplyCode();
+            if (!FTPReply.isPositiveCompletion(reply))
+            {
+                LOG.error("FTPS remote store failed with code: {}", reply);
+                ftpsClient.logout();
+                ftpsClient.disconnect();
+                return false;
+            }
+
+            String[] tmp = ftpsClient.listNames();  //returns null
+            LOG.info(String.valueOf(tmp.length));
         }
         catch (IOException ex)
         {
-            System.out.println("Oops! Something wrong happened");
+            LOG.error("Oops! Exception caught: {}", ex.getMessage());
             ex.printStackTrace();
+            return false;
         }
         finally
         {
             // logs out and disconnects from server
             try
             {
-                if (ftp.isConnected())
+                if (ftpsClient.isConnected())
                 {
-                    ftp.logout();
-                    ftp.disconnect();
+                    ftpsClient.logout();
+                    ftpsClient.disconnect();
                 }
             }
             catch (IOException ex)
@@ -101,6 +104,14 @@ public class SecureUpload {
                 ex.printStackTrace();
             }
         }
+        return true;
+    }
+
+    private FTPSClient initialiseClient() {
+        FTPSClient ftpsClient = new FTPSClient("FTP");
+        //ftpsClient.setAuthValue("SSL");
+        ftpsClient.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+        return ftpsClient;
     }
 
     private Properties getFtpProps() {
