@@ -59,8 +59,6 @@ public class MetoExcelWriter {
 
     private static final String MSG_SUCCESS = " file has been generated successfully.";
 
-
-
     MetoDataUtilities utility = new MetoDataUtilities();
 
     private String historicXlsFileName;
