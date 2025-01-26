@@ -10,9 +10,9 @@ import java.util.Properties;
 
 public class MetoFTPHandler {
     private static final Logger LOG = LoggerFactory.getLogger(MetoFTPHandler.class);
-    private static final String METO_EXTREMES_FILENAME = "MetOfficeExtremes.zip";
-    private static final String METO_HISTORIC_FILENAME = "MetOfficeHistoricData.zip";
-    private static final String METO_YRLYAVGS_FILENAME = "MetOfficeYearlyAverages.zip";
+    private static final String METO_EXTREMES_FILENAME = "MetOfficeExtremes.xlsx";
+    private static final String METO_HISTORIC_FILENAME = "MetOfficeHistoricData.xlsx";
+    private static final String METO_YRLYAVGS_FILENAME = "MetOfficeYearlyAverages.xlsx";
 
     FTPClient ftpClient = new FTPClient();
 
@@ -45,9 +45,9 @@ public class MetoFTPHandler {
 
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
-            this.uploadFile(METO_EXTREMES_FILENAME);
             this.uploadFile(METO_HISTORIC_FILENAME);
             this.uploadFile(METO_YRLYAVGS_FILENAME);
+            this.uploadFile(METO_EXTREMES_FILENAME);
 
         } catch (IOException ex) {
             LOG.error("Upload Error: " + ex.getMessage());
