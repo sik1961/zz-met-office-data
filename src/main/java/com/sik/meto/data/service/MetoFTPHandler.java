@@ -4,6 +4,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;
 import java.util.Properties;
@@ -16,29 +17,35 @@ public class MetoFTPHandler {
 
     FTPClient ftpClient = new FTPClient();
 
-    private final String ftpHost;
-    private final int ftpPort;
-    private final String ftpUser;
-    private final String ftpPass;
-    private final String ftpLdir;
+    @Value("${neunelfer.ftp.url}")
+    private String ftpHost;
+    @Value("${neunelfer.ftp.port}")
+    private int ftpPort;
+    @Value("${neunelfer.ftp.username}")
+    private String ftpUser;
+    @Value("${neunelfer.ftp.secret}")
+    private String ftpPass;
+    @Value("${neunelfer.ftp.localdir}")
+    private String ftpLdir;
 
     public MetoFTPHandler() {
-        Properties properties = new Properties();
-        try {
-            properties.load(new FileInputStream("/Users/sik/met-office/ftp/ftp.properties"));
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        this.ftpHost = properties.getProperty("neunelfer.ftp.url");
-        this.ftpPort = Integer.parseInt(properties.getProperty("neunelfer.ftp.port"));
-        this.ftpUser = properties.getProperty("neunelfer.ftp.username");
-        this.ftpPass = properties.getProperty("neunelfer.ftp.secret");
-        this.ftpLdir = properties.getProperty("neunelfer.ftp.localdir");
+//        Properties properties = new Properties();
+//        try {
+//            properties.load(new FileInputStream("/Users/sik/met-office/ftp/ftp.properties"));
+//        } catch (IOException e) {
+//            throw new IllegalStateException(e);
+//        }
+//        this.ftpHost = properties.getProperty("neunelfer.ftp.url");
+//        this.ftpPort = Integer.parseInt(properties.getProperty("neunelfer.ftp.port"));
+//        this.ftpUser = properties.getProperty("neunelfer.ftp.username");
+//        this.ftpPass = properties.getProperty("neunelfer.ftp.secret");
+//        this.ftpLdir = properties.getProperty("neunelfer.ftp.localdir");
     }
 
     public void uploadFiles() {
 
         try {
+            LOG.info("Connecting to: {}:{} with user: {}",ftpHost, ftpPort, ftpUser);
             ftpClient.connect(ftpHost, ftpPort);
             ftpClient.login(ftpUser, ftpPass);
             ftpClient.enterLocalPassiveMode();
