@@ -18,7 +18,7 @@ public class MetoDataScheduler {
 
     private Set<MonthlyWeatherData> weatherData;
 
-    @Scheduled(cron = "0 0 7 5 * *")
+    @Scheduled(cron = "0 0/1 * * * *")
     public void doStuff() throws IOException {
         MetoDataHandler manager = new MetoDataHandler();
         MetoDataUtilities utilities = new MetoDataUtilities();
