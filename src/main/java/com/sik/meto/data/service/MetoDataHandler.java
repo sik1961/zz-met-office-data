@@ -20,7 +20,7 @@ public class MetoDataHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MetoDataHandler.class);
 
-	private static final String IMPORT_FILE = "src/main/resources/weather-station-data.dat";
+	private static final String IMPORT_FILE = "weather-station-data.dat";
 	private static final String NA = "n/a";
 	private static final String EQ = "=";
 	private static final String SPACES = " +";

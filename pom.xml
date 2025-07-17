@@ -56,30 +56,6 @@
                     </execution>
                 </executions>
             </plugin>
-<!--			<plugin>-->
-<!--				<artifactId>maven-resources-plugin</artifactId>-->
-<!--				<version>2.6</version>-->
-<!--				<executions>-->
-<!--					<execution>-->
-<!--						<id>copy-resources</id>-->
-<!--						<phase>validate</phase>-->
-<!--						<goals>-->
-<!--							<goal>copy-resources</goal>-->
-<!--						</goals>-->
-<!--						<configuration>-->
-<!--							<outputDirectory>${basedir}/src/main/resources</outputDirectory>-->
-<!--							<includeEmptyDirs>true</includeEmptyDirs>-->
-<!--							<resources>-->
-<!--								<resource>-->
-<!--									<targetPath>${basedir}/src/main/resources</targetPath>-->
-<!--									<directory>${basedir}/src/main/resources</directory>-->
-<!--									<filtering>false</filtering>-->
-<!--								</resource>-->
-<!--							</resources>-->
-<!--						</configuration>-->
-<!--					</execution>-->
-<!--				</executions>-->
-<!--			</plugin>-->
 		</plugins>
 	</build>
   <dependencies>
@@ -117,7 +93,7 @@
 	  <dependency>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-parent</artifactId>
-		  <version>3.3.6</version>
+		  <version>2.7.11</version>
 		  <type>pom</type>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/commons-net/commons-net -->
