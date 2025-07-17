@@ -67,10 +67,11 @@ public class MetoFTPHandler {
         InputStream isHistoric = null;
         try {
             isHistoric = new FileInputStream(ftpLdir + fileName);
+            LOG.info("Uploading {} ... ", fileName);
             boolean uploadOk = ftpClient.storeFile(fileName, isHistoric);
             isHistoric.close();
             if (uploadOk) {
-                LOG.info("{} uploaded successfully.", fileName);
+                LOG.info("Done.", fileName);
             }
         } catch (FileNotFoundException e) {
             throw new IllegalStateException(e);
