@@ -8,11 +8,9 @@ import com.sik.meto.data.service.MetoFTPHandler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -20,7 +18,7 @@ public class MetoDataScheduler {
 
     private Set<MonthlyWeatherData> weatherData;
 
-    @Scheduled(cron = "0 0/1 * * * *")
+    @Scheduled(cron = "0 0 7 5 * *")
     public void doStuff() throws IOException {
         MetoDataHandler manager = new MetoDataHandler();
         MetoDataUtilities utilities = new MetoDataUtilities();
