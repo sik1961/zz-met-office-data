@@ -8,3 +8,6 @@ Recent update changes the output to Excel spreadsheet format making for easier m
 2. Yearly Averages for all stations.
 3. Extremes for all stations.
 
+master branch currently used for adhoc runs on laptop
+
+
