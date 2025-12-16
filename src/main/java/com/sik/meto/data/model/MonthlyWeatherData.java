@@ -24,6 +24,7 @@ public class MonthlyWeatherData  implements Comparable<MonthlyWeatherData> {
 	public static final String LOC = "Location";
 	public static final String LAT = "Lat";
 	public static final String LON = "Lon";
+	public static final String CSV_FMT = "%s,%s,%s,%.2f,%.2f,%.2f,%s,%s,%s";
 
 	private String id;
 	private String stationName;
@@ -45,5 +46,17 @@ public class MonthlyWeatherData  implements Comparable<MonthlyWeatherData> {
 		} else {
 			return that.stationName.hashCode() - this.stationName.hashCode();
 		}
+	}
+
+	public String toCsv() {
+		return String.format(CSV_FMT,this.id,
+				this.stationName,
+				this.stationLocation,
+				this.tempMaxC,
+				this.tempMedC,
+				this.tempMinC,
+				this.afDays,
+				this.rainfallMm,
+				this.sunHours);
 	}
 }
