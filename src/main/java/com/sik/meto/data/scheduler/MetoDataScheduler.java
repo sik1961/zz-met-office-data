@@ -1,10 +1,7 @@
 package com.sik.meto.data.scheduler;
 
 import com.sik.meto.data.model.MonthlyWeatherData;
-import com.sik.meto.data.service.MetoDataHandler;
-import com.sik.meto.data.service.MetoDataUtilities;
-import com.sik.meto.data.service.MetoExcelWriter;
-import com.sik.meto.data.service.MetoFTPHandler;
+import com.sik.meto.data.service.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +20,7 @@ public class MetoDataScheduler {
         MetoDataHandler manager = new MetoDataHandler();
         MetoDataUtilities utilities = new MetoDataUtilities();
         MetoExcelWriter excelWriter = new MetoExcelWriter();
+        MetoCsvWriter csvWriter = new MetoCsvWriter();
         MetoFTPHandler ftpHandler = new MetoFTPHandler();
 
         this.weatherData = manager.getMonthlyData();
@@ -43,6 +41,8 @@ public class MetoDataScheduler {
         excelWriter.writeAveragesWorkbook(sortedMap);
 
         excelWriter.writeExtremesWorkbook(utilities.buildExtremesMap(weatherData));
+
+        csvWriter.writeHistoricWorkbook(sortedMap);
 
         ftpHandler.uploadFiles();
     }
