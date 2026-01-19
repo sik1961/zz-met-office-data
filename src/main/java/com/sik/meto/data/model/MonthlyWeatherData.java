@@ -24,7 +24,9 @@ public class MonthlyWeatherData  implements Comparable<MonthlyWeatherData> {
 	public static final String LOC = "Location";
 	public static final String LAT = "Lat";
 	public static final String LON = "Lon";
-	public static final String CSV_FMT = "%s,%s,%s,%.2f,%.2f,%.2f,%s,%s,%s";
+	public static final String CSV_FMT = "%s,%s,%s,%s,%.2f,%.2f,%.2f,%s,%s,%s";
+	public static final String MSD_FMT = "%4d-%02d-%02d";
+
 
 	private String id;
 	private String stationName;
@@ -53,6 +55,7 @@ public class MonthlyWeatherData  implements Comparable<MonthlyWeatherData> {
 		return String.format(CSV_FMT,this.id,
 				this.stationName,
 				this.stationLocation,
+				String.format(MSD_FMT,this.monthStartDate.getYear(),monthStartDate.getMonthValue(),monthStartDate.getDayOfMonth()),
 				this.tempMaxC,
 				this.tempMedC,
 				this.tempMinC,
